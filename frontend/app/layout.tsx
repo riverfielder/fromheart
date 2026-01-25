@@ -3,6 +3,9 @@ import "./globals.css";
 export const metadata = {
   title: "一问 / from heart",
   description: "每日一问，基于易经与梅花易数",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

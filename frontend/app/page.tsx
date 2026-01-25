@@ -137,9 +137,15 @@ export default function HomePage() {
           className="bg-emerald-50/50 backdrop-blur-md rounded-3xl p-6 space-y-4 border border-emerald-100/50"
         >
           {!result ? (
-             <div className="flex flex-col items-center justify-center py-8 text-emerald-800/40 space-y-2">
-                <div className="w-8 h-8 rounded-full border-2 border-emerald-800/20 flex items-center justify-center">?</div>
-                <p className="text-sm font-serif">卦象待显</p>
+             <div className="flex flex-col items-center justify-center py-8 text-emerald-800/40 space-y-4">
+                <motion.div 
+                  className="relative w-16 h-16 opacity-40"
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+                >
+                  <Image src="/bagua.svg" alt="Bagua" fill className="object-contain" />
+                </motion.div>
+                <p className="text-sm font-serif tracking-widest text-emerald-800/60">卦象待显</p>
              </div>
           ) : (
             <motion.div

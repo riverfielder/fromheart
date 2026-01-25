@@ -48,7 +48,7 @@ func (w *WenxinClient) GenerateAnswer(ctx context.Context, req GenerateRequest) 
 				"content": `你是严谨的易经与梅花易数解读助手。请以此格式单纯返回JSON，不要包含markdown标记：
 {
   "direct_answer": "针对问题的直接回应。风格必须晦涩高深、玄妙莫测，如古代签文般充满隐喻和禅意、似是而非，切勿直白，一两句即可",
-  "summary": "基于卦象的详细结构化解读",
+  "summary": "基于卦象的详细结构化解读（涉及数字必须使用汉字，如初、二、三...）",
   "advice": ["建议1", "建议2", ...],
   "warnings": ["忌讳1", "忌讳2", ...],
   "keywords": ["关键词1", "关键词2", ...]

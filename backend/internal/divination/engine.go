@@ -1,7 +1,6 @@
 package divination
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -24,10 +23,11 @@ func Generate(question string) Result {
 	ben := guaNames[r.Intn(len(guaNames))]
 	bian := guaNames[r.Intn(len(guaNames))]
 	lines := r.Intn(6) + 1
+	cnLines := []string{"", "一", "二", "三", "四", "五", "六"}
 	return Result{
 		BenGua:        ben,
 		BianGua:       bian,
-		ChangingLines: "动爻" + fmt.Sprintf("%d", lines),
+		ChangingLines: "动爻" + cnLines[lines],
 		Seed:          seed,
 	}
 }
