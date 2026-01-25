@@ -74,7 +74,9 @@ func (w *WenxinClient) GenerateAnswer(ctx context.Context, req GenerateRequest) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("wenxin api error: status %d", resp.StatusCode)
+		var errBody map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errBody)
+		return "", fmt.Errorf("wenxin api error: status %d, body: %v", resp.StatusCode, errBody)
 	}
 
 	var parsed struct {
