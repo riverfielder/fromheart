@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"fromheart/internal/adapters/llm"
@@ -13,8 +12,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
-
-var ErrDailyLimit = errors.New("daily limit reached")
 
 type QuestionService struct {
 	postgres *gorm.DB
@@ -38,16 +35,6 @@ type AskResponse struct {
 
 func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse, error) {
 	today := time.Now().Truncate(24 * time.Hour)
-
-	var count int64
-	if err := s.postgres.Model(&db.DailyQuestion{}).
-		Where("device_hash = ? AND question_date = ?", req.DeviceHash, today).
-		Count(&count).Error; err != nil {
-		return AskResponse{}, err
-	}
-	if count > 0 {
-		return AskResponse{}, ErrDailyLimit
-	}
 
 	result := divination.Generate(req.Question)
 
