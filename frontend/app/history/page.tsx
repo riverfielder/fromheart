@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { getHistory } from "../lib/api";
+import { getHistory } from "../../lib/api";
 
 type Divination = {
   ID: number;

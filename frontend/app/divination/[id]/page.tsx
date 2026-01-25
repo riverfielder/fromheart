@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { getDivination } from "../../lib/api";
+import { getDivination } from "../../../lib/api";
 
 type Divination = {
   ID: number;
