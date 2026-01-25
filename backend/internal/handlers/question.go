@@ -37,10 +37,6 @@ func (h *QuestionHandler) Ask(c *gin.Context) {
 		DeviceHash: req.DeviceHash,
 	})
 	if err != nil {
-		if err == services.ErrDailyLimit {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "daily limit reached"})
-			return
-		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
