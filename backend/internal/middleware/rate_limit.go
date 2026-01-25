@@ -11,6 +11,10 @@ func RateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("X-RateLimit-Policy", "placeholder")
 		time.Sleep(0)
+		if c.Request.Method == http.MethodOptions {
+			c.Status(http.StatusNoContent)
+			return
+		}
 		c.Next()
 		if c.Writer.Status() == http.StatusTooManyRequests {
 			c.Abort()
