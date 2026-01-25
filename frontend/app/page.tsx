@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { askQuestion, getDailyPoem } from "../lib/api";
 
 type Output = {
+  direct_answer: string;
   summary: string;
   advice: string[];
   warnings: string[];
@@ -88,6 +89,7 @@ export default function HomePage() {
           <p className="text-sm">卦象结果将展示在这里。</p>
         ) : (
           <>
+            <p className="text-lg font-serif text-emerald-900 border-b border-emerald-100 pb-2 mb-2">{result.direct_answer}</p>
             <p className="text-sm">{result.summary}</p>
             <div className="text-xs text-gray-600">
               关键词：{result.keywords.join(" · ")}

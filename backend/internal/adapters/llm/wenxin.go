@@ -44,12 +44,19 @@ func (w *WenxinClient) GenerateAnswer(ctx context.Context, req GenerateRequest) 
 		"model": w.model,
 		"messages": []map[string]string{
 			{
-				"role":    "system",
-				"content": "你是严谨的易经与梅花易数解读助手。回答必须基于卦象，不得输出泛化鸡汤。",
+				"role": "system",
+				"content": `你是严谨的易经与梅花易数解读助手。请以此格式单纯返回JSON，不要包含markdown标记：
+{
+  "direct_answer": "针对问题的直接回应。风格必须晦涩高深、玄妙莫测，如古代签文般充满隐喻和禅意、似是而非，切勿直白，一两句即可",
+  "summary": "基于卦象的详细结构化解读",
+  "advice": ["建议1", "建议2", ...],
+  "warnings": ["忌讳1", "忌讳2", ...],
+  "keywords": ["关键词1", "关键词2", ...]
+}`,
 			},
 			{
 				"role":    "user",
-				"content": fmt.Sprintf("问题：%s\n本卦：%s\n变卦：%s\n动爻：%s\n请给出结构化解读。", req.Question, req.BenGua, req.BianGua, req.ChangingLines),
+				"content": fmt.Sprintf("问题：%s\n本卦：%s\n变卦：%s\n动爻：%s\n请给出JSON格式的解读。", req.Question, req.BenGua, req.BianGua, req.ChangingLines),
 			},
 		},
 	}

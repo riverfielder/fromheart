@@ -1,21 +1,47 @@
 package postprocess
 
-import "fmt"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type Output struct {
-	Summary  string   `json:"summary"`
-	Advice   []string `json:"advice"`
-	Warnings []string `json:"warnings"`
-	Keywords []string `json:"keywords"`
-	Raw      string   `json:"raw"`
+	DirectAnswer string   `json:"direct_answer"`
+	Summary      string   `json:"summary"`
+	Advice       []string `json:"advice"`
+	Warnings     []string `json:"warnings"`
+	Keywords     []string `json:"keywords"`
+	Raw          string   `json:"raw"`
 }
 
 func Normalize(raw, ben, bian, lines string) Output {
+	var parsed Output // Try to parse raw as JSON
+
+	cleanRaw := strings.TrimSpace(raw)
+	if strings.HasPrefix(cleanRaw, "```json") {
+		cleanRaw = strings.TrimPrefix(cleanRaw, "```json")
+		cleanRaw = strings.TrimSuffix(cleanRaw, "```")
+	} else if strings.HasPrefix(cleanRaw, "```") {
+		cleanRaw = strings.TrimPrefix(cleanRaw, "```")
+		cleanRaw = strings.TrimSuffix(cleanRaw, "```")
+	}
+	cleanRaw = strings.TrimSpace(cleanRaw)
+
+	err := json.Unmarshal([]byte(cleanRaw), &parsed)
+	if err == nil {
+		parsed.Raw = raw
+		if parsed.DirectAnswer == "" {
+			parsed.DirectAnswer = "天机未显，静候缘分。"
+		}
+		return parsed
+	}
+
 	return Output{
-		Summary:  fmt.Sprintf("本卦%s，变卦%s，%s指向收敛与观察。", ben, bian, lines),
-		Advice:   []string{"放慢节奏", "先稳后动", "留意细节"},
-		Warnings: []string{"避免冲动", "勿轻信承诺"},
-		Keywords: []string{"守", "缓", "静"},
-		Raw:      raw,
+		DirectAnswer: "云深不知处，只在此山中。",
+		Summary:      raw,
+		Advice:       []string{"静观其变"},
+		Warnings:     []string{"勿急躁"},
+		Keywords:     []string{"待"},
+		Raw:          raw,
 	}
 }
