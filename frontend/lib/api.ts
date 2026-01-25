@@ -19,3 +19,11 @@ export async function getHistory(deviceHash: string) {
   }
   return res.json();
 }
+
+export async function getDivination(id: number) {
+  const res = await fetch(`${API_BASE}/api/divination/${id}`);
+  if (!res.ok) {
+    throw new Error("request failed");
+  }
+  return res.json();
+}

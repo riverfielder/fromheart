@@ -1,0 +1,7 @@
+.env
+frontend/.env.local
+backend/.env
+*.log
+node_modules/
+.next/
+vendor/
