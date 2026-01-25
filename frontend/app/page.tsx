@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -60,9 +61,14 @@ export default function HomePage() {
 
   return (
     <main className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold">一问</h1>
-        <p className="text-sm text-gray-500">from heart</p>
+      <header className="flex flex-col items-center space-y-4 pt-8">
+        <div className="relative w-24 h-24">
+          <Image src="/logo.svg" alt="From Heart Logo" fill className="object-contain" priority />
+        </div>
+        <div className="text-center space-y-1">
+          <h1 className="text-3xl font-semibold text-gray-800">一问</h1>
+          <p className="text-sm text-gray-500 font-serif tracking-wide">from heart</p>
+        </div>
       </header>
 
       <section className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
