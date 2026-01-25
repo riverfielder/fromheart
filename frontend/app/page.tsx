@@ -228,6 +228,17 @@ export default function HomePage() {
             </p>
         </motion.footer>
       )}
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+        className="text-center pb-4 mt-8"
+      >
+         <p className="text-[10px] text-gray-300 font-serif tracking-widest opacity-60 hover:opacity-100 transition-opacity select-none cursor-default">
+            River
+         </p>
+      </motion.div>
     </main>
   );
 }
