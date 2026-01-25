@@ -1,4 +1,4 @@
-package postprocess
+﻿package postprocess
 
 import (
 	"encoding/json"
@@ -28,14 +28,13 @@ func Normalize(raw, ben, bian, lines string) Output {
 	var llmResp LLMResponse // Intermediate parsing
 
 	cleanRaw := strings.TrimSpace(raw)
-	if strings.HasPrefix(cleanRaw, "```json") {
-		cleanRaw = strings.TrimPrefix(cleanRaw, "```json")
-		cleanRaw = strings.TrimSuffix(cleanRaw, "```")
-	} else if strings.HasPrefix(cleanRaw, "```") {
-		cleanRaw = strings.TrimPrefix(cleanRaw, "```")
-		cleanRaw = strings.TrimSuffix(cleanRaw, "```")
+
+	// Robust JSON extraction: Locate the first '{' and the last '}'
+	start := strings.Index(cleanRaw, "{")
+	end := strings.LastIndex(cleanRaw, "}")
+	if start != -1 && end != -1 && end > start {
+		cleanRaw = cleanRaw[start : end+1]
 	}
-	cleanRaw = strings.TrimSpace(cleanRaw)
 
 	err := json.Unmarshal([]byte(cleanRaw), &llmResp)
 	if err == nil {
