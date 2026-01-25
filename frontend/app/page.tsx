@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { askQuestion } from "../lib/api";
+import { askQuestion, getDailyPoem } from "../lib/api";
 
 type Output = {
   summary: string;
@@ -20,8 +20,11 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Output | null>(null);
   const [divinationId, setDivinationId] = useState<number | null>(null);
+  const [poem, setPoem] = useState<string | null>(null);
 
   useEffect(() => {
+    getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
+
     const key = "fh_device";
     const stored = window.localStorage.getItem(key);
     if (stored) {
@@ -58,7 +61,7 @@ export default function HomePage() {
     <main className="space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold">一问</h1>
-        <p className="text-sm text-gray-500">from heart · 每日只问一题</p>
+        <p className="text-sm text-gray-500">from heart</p>
       </header>
 
       <section className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
@@ -75,7 +78,7 @@ export default function HomePage() {
           onClick={handleAsk}
           disabled={loading}
         >
-          {loading ? "生成中..." : "今日问"}
+          {loading ? "推演中" : "今日问"}
         </button>
         {error && <p className="text-sm text-red-500">{error}</p>}
       </section>
@@ -112,6 +115,15 @@ export default function HomePage() {
           查看历史记录 →
         </Link>
       </div>
+
+      {poem && (
+        <footer className="mt-12 text-center space-y-2">
+            <div className="w-16 h-px bg-gray-200 mx-auto"></div>
+            <p className="text-xs text-gray-400 font-serif whitespace-pre-line leading-relaxed italic">
+                {poem}
+            </p>
+        </footer>
+      )}
     </main>
   );
 }

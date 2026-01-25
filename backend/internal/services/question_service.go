@@ -97,3 +97,25 @@ func (s *QuestionService) History(ctx context.Context, deviceHash string, limit 
 	}
 	return divs, nil
 }
+
+func (s *QuestionService) GetDailyPoem(ctx context.Context) (string, error) {
+	todayKey := "daily_poem:" + time.Now().Format("2006-01-02")
+	cached, err := s.redis.Get(ctx, todayKey).Result()
+	if err == nil {
+		return cached, nil
+	} else if err != redis.Nil {
+		// If real error, maybe still try to generate, but for now return err if needed
+		// But let's proceed to generate as fallback if it's just a connection glitch?
+		// No, usually better to return error if infrastructure is down.
+		// However, for redis nil, we proceed.
+	}
+
+	poem, err := s.llm.GeneratePoem(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// Calculate TTL until end of day? Or just 24h. 24h is simpler.
+	s.redis.Set(ctx, todayKey, poem, 24*time.Hour)
+	return poem, nil
+}

@@ -73,3 +73,12 @@ func (h *QuestionHandler) History(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"items": divs})
 }
+
+func (h *QuestionHandler) GetPoem(c *gin.Context) {
+	poem, err := h.service.GetDailyPoem(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"poem": poem})
+}

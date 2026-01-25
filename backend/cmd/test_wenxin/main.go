@@ -29,7 +29,7 @@ func main() {
 	if !strings.HasPrefix(apiKey, "bce-v3/") {
 		fmt.Println("WARNING: API Key does not start with 'bce-v3/'. If you are using the new ModelBuilder API, the key usually starts with 'bce-v3/'.")
 		fmt.Println("If you are using the old AK/SK, this code does not support it.")
-	} 
+	}
 
 	url := "https://qianfan.baidubce.com/v2/chat/completions"
 	model := os.Getenv("WENXIN_MODEL")

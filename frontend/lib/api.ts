@@ -27,3 +27,11 @@ export async function getDivination(id: number) {
   }
   return res.json();
 }
+
+export async function getDailyPoem() {
+  const res = await fetch(`${API_BASE}/api/poem`);
+  if (!res.ok) {
+    throw new Error("request failed");
+  }
+  return res.json();
+}
