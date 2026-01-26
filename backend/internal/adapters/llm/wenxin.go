@@ -28,7 +28,7 @@ func NewWenxinClient(cfg config.Config) *WenxinClient {
 		apiKey:     cfg.WenxinKey,
 		model:      cfg.WenxinModel,
 		baseURL:    baseURL,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
+		httpClient: &http.Client{Timeout: 120 * time.Second},
 	}
 }
 
