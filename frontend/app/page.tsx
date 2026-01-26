@@ -277,36 +277,28 @@ export default function HomePage() {
         <AnimatePresence>
           {showToast && (
             <motion.div
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 1 } }}
+              initial={{ opacity: 0, x: 0, y: 0, scale: 0.5 }}
+              animate={{ 
+                opacity: [0, 0.8, 0],
+                x: 180, 
+                y: -300,
+                scale: [0.5, 1.5, 0]
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2.5, ease: "easeInOut", times: [0, 0.2, 1] }}
               className="absolute left-[35%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none"
             >
-               <div className="relative flex items-center justify-center w-40 h-16">
-                  {/* Mist Layers */}
+               <div className="relative w-20 h-20">
                   <motion.div 
-                     initial={{ opacity: 0, scale: 0.2, filter: "blur(20px)" }}
-                     animate={{ opacity: [0, 0.8, 0], scale: [0.5, 1.5, 2], rotate: 20 }}
-                     transition={{ duration: 2.5, times: [0, 0.4, 1] }}
-                     className="absolute bg-emerald-50 w-24 h-24 rounded-full blur-xl"
+                     animate={{ rotate: 180 }}
+                     transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+                     className="absolute inset-0 bg-emerald-100/60 rounded-full blur-xl"
                   />
                   <motion.div 
-                     initial={{ opacity: 0, scale: 0.2, filter: "blur(15px)" }}
-                     animate={{ opacity: [0, 0.6, 0], scale: [0.5, 1.3, 1.8], rotate: -20 }}
-                     transition={{ duration: 2.8, times: [0, 0.4, 1] }}
-                     className="absolute bg-white w-20 h-20 rounded-full blur-lg opacity-80"
+                     animate={{ rotate: -180 }}
+                     transition={{ duration: 4, ease: "linear", repeat: Infinity }}
+                     className="absolute inset-2 bg-white/70 rounded-full blur-lg"
                   />
-                  
-                  {/* The Text */}
-                  <motion.span 
-                     initial={{ opacity: 0, filter: "blur(10px)", scale: 0.9 }}
-                     animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
-                     transition={{ delay: 1, duration: 1.5, ease: "easeOut" }}
-                     className="relative z-10 text-lg font-serif text-emerald-900/80 font-medium tracking-[0.2em] pl-1 drop-shadow-sm whitespace-nowrap"
-                  >
-                     气运变弱
-                  </motion.span>
                </div>
             </motion.div>
           )}
