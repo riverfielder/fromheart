@@ -30,6 +30,8 @@ func NewRouter(handler *handlers.QuestionHandler) *gin.Engine {
 		api.GET("/divination/:id", handler.GetDivination)
 		api.GET("/history", handler.History)
 		api.GET("/poem", handler.GetPoem)
+		api.GET("/usage", handler.GetUsage)
+		api.GET("/blessing", handler.GetBlessing)
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})

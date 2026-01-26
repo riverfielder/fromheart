@@ -8,6 +8,9 @@ export async function askQuestion(question: string, deviceHash: string) {
     body: JSON.stringify({ question, device_hash: deviceHash }),
   });
   if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error("daily_limit_reached");
+    }
     throw new Error("request failed");
   }
   return res.json();
@@ -31,6 +34,22 @@ export async function getDivination(id: number) {
 
 export async function getDailyPoem() {
   const res = await fetch(`${API_BASE}/api/poem`);
+  if (!res.ok) {
+    throw new Error("request failed");
+  }
+  return res.json();
+}
+
+export async function getUsage(deviceHash: string) {
+  const res = await fetch(`${API_BASE}/api/usage?device_hash=${deviceHash}`);
+  if (!res.ok) {
+    throw new Error("request failed");
+  }
+  return res.json();
+}
+
+export async function getBlessing() {
+  const res = await fetch(`${API_BASE}/api/blessing`);
   if (!res.ok) {
     throw new Error("request failed");
   }

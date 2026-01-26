@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { askQuestion, getDailyPoem } from "../lib/api";
+import { askQuestion, getDailyPoem, getUsage, getBlessing } from "../lib/api";
 
 type Output = {
   direct_answer: string;
@@ -24,22 +24,29 @@ export default function HomePage() {
   const [result, setResult] = useState<Output | null>(null);
   const [divinationId, setDivinationId] = useState<number | null>(null);
   const [poem, setPoem] = useState<string | null>(null);
+  const [usageCount, setUsageCount] = useState(0);
+  const [showDonation, setShowDonation] = useState(false);
+  const [blessing, setBlessing] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState<"none" | "wechat" | "alipay">("none");
 
   useEffect(() => {
     getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
 
     const key = "fh_device";
     const stored = window.localStorage.getItem(key);
-    if (stored) {
-      setDeviceHash(stored);
-      return;
-    }
-    const generated =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
+    let currentHash = stored;
+
+    if (!currentHash) {
+      currentHash = typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : `fh_${Math.random().toString(36).slice(2)}`;
-    window.localStorage.setItem(key, generated);
-    setDeviceHash(generated);
+      window.localStorage.setItem(key, currentHash);
+    }
+    setDeviceHash(currentHash);
+
+    getUsage(currentHash)
+      .then(res => setUsageCount(res.count))
+      .catch(() => {});
   }, []);
 
   const handleAsk = async () => {
@@ -53,15 +60,105 @@ export default function HomePage() {
       const res = await askQuestion(question.trim(), deviceHash);
       setResult(res.result);
       setDivinationId(res.divination_id);
-    } catch {
-      setError("请求失败，请稍后重试");
+      setUsageCount(res.usage_count);
+      alert("气运能量 -1");
+    } catch (err: any) {
+      if (err.message === "daily_limit_reached") {
+        setError("不可贪念天机");
+      } else {
+        setError("请求失败，请稍后重试");
+      }
     } finally {
       setLoading(false);
     }
   };
+  
+  const handleOpenDonation = async () => {
+    setShowDonation(true);
+    if (!blessing) {
+       try {
+         const res = await getBlessing();
+         setBlessing(res.blessing);
+       } catch {}
+    }
+  };
 
   return (
-    <main className="space-y-8 max-w-lg mx-auto p-4 sm:p-6">
+    <main className="space-y-8 max-w-lg mx-auto p-4 sm:p-6 relative">
+      {/* Incense Icon */}
+      <motion.div 
+        className="absolute top-4 right-4 cursor-pointer z-10"
+        onClick={handleOpenDonation}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.3 + (usageCount * 0.25) }}
+        whileHover={{ scale: 1.1 }}
+      >
+        <div className="flex flex-col items-center">
+            <span className="text-2xl filter drop-shadow-md">🕯️</span>
+            <span className="text-[10px] text-stone-500 font-serif">香火</span>
+        </div>
+      </motion.div>
+
+      {/* Donation Modal */}
+      <AnimatePresence>
+        {showDonation && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowDonation(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-6 text-center shadow-2xl relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-serif text-emerald-800">福源广进</h3>
+              
+              {blessing ? (
+                 <p className="text-stone-600 font-serif text-lg leading-loose italic">{blessing}</p>
+              ) : (
+                 <p className="text-gray-400 text-sm animate-pulse">祈福中...</p>
+              )}
+
+              <div className="pt-4 space-y-4">
+                 <button 
+                   onClick={() => setShowQR(showQR === "wechat" ? "none" : "wechat")}
+                   className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-emerald-200 transition-all font-medium text-sm flex items-center justify-center gap-2"
+                 >
+                   <span>🙏</span> 施舍香火以获福源
+                 </button>
+                 
+                 <AnimatePresence mode="wait">
+                   {showQR !== "none" && (
+                     <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                     >
+                       <div className="flex justify-center gap-4 mb-4 text-xs font-medium text-gray-500">
+                          <button onClick={() => setShowQR("wechat")} className={`${showQR==="wechat"?"text-emerald-600 border-b-2 border-emerald-600":""} pb-1`}>微信支付</button>
+                          <button onClick={() => setShowQR("alipay")} className={`${showQR==="alipay"?"text-blue-600 border-b-2 border-blue-600":""} pb-1`}>支付宝</button>
+                       </div>
+                       
+                       <div className="relative w-48 h-48 mx-auto bg-gray-50 rounded-lg p-2 border border-gray-100">
+                          {showQR === "wechat" && <Image src="/wechat.jpg" alt="WeChat Pay" fill className="object-contain" />}
+                          {showQR === "alipay" && <Image src="/alipay.jpg" alt="Alipay" fill className="object-contain" />}
+                       </div>
+                       <p className="text-[10px] text-gray-400 mt-2">心诚则灵，随缘施舍</p>
+                     </motion.div>
+                   )}
+                 </AnimatePresence>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

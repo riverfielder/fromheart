@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"fromheart/internal/adapters/llm"
@@ -12,6 +13,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
+
+var ErrDailyLimitReached = errors.New("daily_limit_reached")
 
 type QuestionService struct {
 	postgres *gorm.DB
@@ -35,6 +38,15 @@ type AskResponse struct {
 
 func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse, error) {
 	today := time.Now().Truncate(24 * time.Hour)
+
+	// Rate limit check: max 3 per day
+	count, err := s.GetTodayQuestionCount(ctx, req.DeviceHash)
+	if err != nil {
+		return AskResponse{}, err
+	}
+	if count >= 3 {
+		return AskResponse{}, services.ErrDailyLimitReached
+	}
 
 	result := divination.Generate(req.Question)
 
@@ -118,4 +130,19 @@ func (s *QuestionService) GetDailyPoem(ctx context.Context) (string, error) {
 	// Calculate TTL until end of day? Or just 24h. 24h is simpler.
 	s.redis.Set(ctx, todayKey, poem, 24*time.Hour)
 	return poem, nil
+}
+
+func (s *QuestionService) GetTodayQuestionCount(ctx context.Context, deviceHash string) (int64, error) {
+	today := time.Now().Truncate(24 * time.Hour)
+	var count int64
+	if err := s.postgres.Model(&db.DailyQuestion{}).
+		Where("device_hash = ? AND question_date = ?", deviceHash, today).
+		Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (s *QuestionService) GetBlessing(ctx context.Context) (string, error) {
+	return s.llm.GenerateBlessing(ctx)
 }

@@ -12,4 +12,5 @@ type GenerateRequest struct {
 type Client interface {
 	GenerateAnswer(ctx context.Context, req GenerateRequest) (string, error)
 	GeneratePoem(ctx context.Context) (string, error)
+	GenerateBlessing(ctx context.Context) (string, error)
 }

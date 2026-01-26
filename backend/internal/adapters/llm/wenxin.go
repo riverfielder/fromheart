@@ -175,3 +175,61 @@ func (w *WenxinClient) GeneratePoem(ctx context.Context) (string, error) {
 	}
 	return parsed.Choices[0].Message.Content, nil
 }
+
+func (w *WenxinClient) GenerateBlessing(ctx context.Context) (string, error) {
+	prompt := "你是精通佛道与梅花易数的大师。请生成一句简短的、充满禅意与美好祝愿的诗句（七言或五言），祝福施舍香火的有缘人。要求：不要标题，仅一句诗，20字以内。"
+
+	if w.apiKey == "" {
+		return "", errors.New("missing WENXIN_API_KEY")
+	}
+
+	payload := map[string]interface{}{
+		"model": w.model,
+		"messages": []map[string]string{
+			{"role": "user", "content": prompt},
+		},
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+
+	endpoint := w.baseURL + "/v2/chat/completions"
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+w.apiKey)
+
+	resp, err := w.httpClient.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", fmt.Errorf("api error: %d", resp.StatusCode)
+	}
+
+	var parsed struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+		Result string `json:"result,omitempty"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return "", err
+	}
+
+	if len(parsed.Choices) > 0 {
+		return parsed.Choices[0].Message.Content, nil
+	}
+	if parsed.Result != "" {
+		return parsed.Result, nil
+	}
+	return "", errors.New("empty response")
+}

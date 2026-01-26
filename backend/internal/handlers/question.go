@@ -37,13 +37,21 @@ func (h *QuestionHandler) Ask(c *gin.Context) {
 		DeviceHash: req.DeviceHash,
 	})
 	if err != nil {
+		if err == services.ErrDailyLimitReached {
+			c.JSON(http.StatusForbidden, gin.H{"error": "daily_limit_reached", "message": "不可贪念天机"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Fetch updated count to return to frontend
+	count, _ := h.service.GetTodayQuestionCount(c.Request.Context(), req.DeviceHash)
+
 	c.JSON(http.StatusOK, gin.H{
 		"divination_id": resp.DivinationID,
 		"result":        resp.Output,
+		"usage_count":   count,
 	})
 }
 
@@ -72,6 +80,29 @@ func (h *QuestionHandler) History(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"items": divs})
+}
+
+func (h *QuestionHandler) GetUsage(c *gin.Context) {
+	device := c.Query("device_hash")
+	if device == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "device_hash required"})
+		return
+	}
+	count, err := h.service.GetTodayQuestionCount(c.Request.Context(), device)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"count": count})
+}
+
+func (h *QuestionHandler) GetBlessing(c *gin.Context) {
+	blessing, err := h.service.GetBlessing(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"blessing": blessing})
 }
 
 func (h *QuestionHandler) GetPoem(c *gin.Context) {
