@@ -139,45 +139,6 @@ export default function HomePage() {
 
       <div className="max-w-lg mx-auto space-y-8 relative">
       
-      {/* Energy Toast */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            layout
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 1 } }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
-          >
-             <div className="relative flex items-center justify-center w-40 h-16">
-                {/* Mist Layers */}
-                <motion.div 
-                   initial={{ opacity: 0, scale: 0.2, filter: "blur(20px)" }}
-                   animate={{ opacity: [0, 0.8, 0], scale: [0.5, 1.5, 2], rotate: 20 }}
-                   transition={{ duration: 2.5, times: [0, 0.4, 1] }}
-                   className="absolute bg-emerald-50 w-24 h-24 rounded-full blur-xl"
-                />
-                <motion.div 
-                   initial={{ opacity: 0, scale: 0.2, filter: "blur(15px)" }}
-                   animate={{ opacity: [0, 0.6, 0], scale: [0.5, 1.3, 1.8], rotate: -20 }}
-                   transition={{ duration: 2.8, times: [0, 0.4, 1] }}
-                   className="absolute bg-white w-20 h-20 rounded-full blur-lg opacity-80"
-                />
-                
-                {/* The Text */}
-                <motion.span 
-                   initial={{ opacity: 0, filter: "blur(10px)", scale: 0.9 }}
-                   animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
-                   transition={{ delay: 1, duration: 1.5, ease: "easeOut" }}
-                   className="relative z-10 text-lg font-serif text-emerald-900/80 font-medium tracking-[0.2em] pl-1 drop-shadow-sm"
-                >
-                   气运变弱
-                </motion.span>
-             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Error Toast */}
       <AnimatePresence>
         {error && (
@@ -312,7 +273,45 @@ export default function HomePage() {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />
-        <div className="flex justify-end">
+        <div className="flex justify-end items-center relative">
+        <AnimatePresence>
+          {showToast && (
+            <motion.div
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 1 } }}
+              className="absolute left-[35%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none"
+            >
+               <div className="relative flex items-center justify-center w-40 h-16">
+                  {/* Mist Layers */}
+                  <motion.div 
+                     initial={{ opacity: 0, scale: 0.2, filter: "blur(20px)" }}
+                     animate={{ opacity: [0, 0.8, 0], scale: [0.5, 1.5, 2], rotate: 20 }}
+                     transition={{ duration: 2.5, times: [0, 0.4, 1] }}
+                     className="absolute bg-emerald-50 w-24 h-24 rounded-full blur-xl"
+                  />
+                  <motion.div 
+                     initial={{ opacity: 0, scale: 0.2, filter: "blur(15px)" }}
+                     animate={{ opacity: [0, 0.6, 0], scale: [0.5, 1.3, 1.8], rotate: -20 }}
+                     transition={{ duration: 2.8, times: [0, 0.4, 1] }}
+                     className="absolute bg-white w-20 h-20 rounded-full blur-lg opacity-80"
+                  />
+                  
+                  {/* The Text */}
+                  <motion.span 
+                     initial={{ opacity: 0, filter: "blur(10px)", scale: 0.9 }}
+                     animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
+                     transition={{ delay: 1, duration: 1.5, ease: "easeOut" }}
+                     className="relative z-10 text-lg font-serif text-emerald-900/80 font-medium tracking-[0.2em] pl-1 drop-shadow-sm whitespace-nowrap"
+                  >
+                     气运变弱
+                  </motion.span>
+               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.button
           whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.2)" }}
           whileTap={{ scale: 0.98 }}
