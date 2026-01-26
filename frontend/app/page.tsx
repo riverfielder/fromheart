@@ -116,7 +116,13 @@ export default function HomePage() {
   };
 
   return (
-    <main className="space-y-8 max-w-lg mx-auto p-4 sm:p-6 relative">
+    <main className="min-h-screen relative p-4 sm:p-6 overflow-hidden">
+      {/* Background Decor */}
+      <div className="fixed inset-0 z-[-1] bg-gradient-to-br from-[#F6F7F9] via-[#E9F3F0] to-[#F6F7F9] animate-gradient" />
+      <div className="fixed top-0 left-0 w-full h-full z-[-1] opacity-30 pointer-events-none bg-[url('/bagua.svg')] bg-no-repeat bg-[center_top_5rem] bg-[length:600px_600px] blur-3xl" />
+
+      <div className="max-w-lg mx-auto space-y-8 relative">
+      
       {/* Energy Toast */}
       <AnimatePresence>
         {showToast && (
@@ -153,11 +159,11 @@ export default function HomePage() {
 
       {/* Incense Icon */}
       <motion.div 
-        className="absolute top-4 right-4 cursor-pointer z-10"
+        className="absolute top-4 right-4 cursor-pointer z-10 group"
         onClick={handleOpenDonation}
         initial={{ opacity: 0 }}
         animate={{ 
-          opacity: 0.3 + (usageCount * 0.25),
+          opacity: 0.6 + (usageCount * 0.1),
           scale: wiggleIncense ? [1, 1.4, 0.9, 1.1, 1] : 1,
           rotate: wiggleIncense ? [0, -15, 15, -10, 10, 0] : 0,
         }}
@@ -168,9 +174,10 @@ export default function HomePage() {
         }}
         whileHover={{ scale: 1.1 }}
       >
-        <div className="flex flex-col items-center">
-            <span className="text-2xl filter drop-shadow-md">🕯️</span>
-            <span className="text-[10px] text-stone-500 font-serif">香火</span>
+        <div className="flex flex-col items-center relative">
+            <div className={`absolute inset-0 bg-emerald-400 rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${wiggleIncense ? "opacity-40" : ""}`} />
+            <span className="text-2xl filter drop-shadow-md relative z-10">🕯️</span>
+            <span className="text-[10px] text-stone-500 font-serif relative z-10 mt-1">香火</span>
         </div>
       </motion.div>
 
@@ -257,22 +264,24 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-4 border border-white/20"
+        className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-4 border border-white/40 ring-1 ring-white/50"
       >
-        <label className="text-sm text-gray-600 font-medium ml-1">今日问题</label>
+        <label className="text-sm text-gray-500 font-medium ml-1 tracking-wide">今日问题</label>
         <textarea
-          className="w-full bg-gray-50 border-gray-100 rounded-xl p-4 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all duration-300 resize-none shadow-inner"
+          className="w-full bg-white/50 border-transparent rounded-2xl p-4 text-gray-700 placeholder:text-gray-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-100/50 focus:bg-white/80 transition-all duration-300 resize-none shadow-sm hover:shadow-md hover:bg-white/60"
           rows={4}
           placeholder="写下今天唯一的问题..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />
         <div className="flex justify-end">
-        <button
-          className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+        <motion.button
+          whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.2)" }}
+          whileTap={{ scale: 0.98 }}
+          className={`px-8 py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${
             loading 
-              ? "bg-emerald-50 text-emerald-600 cursor-not-allowed" 
-              : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 shadow-emerald-100 shadow-md"
+              ? "bg-emerald-50 text-emerald-400 cursor-not-allowed" 
+              : "bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white shadow-emerald-200/50 shadow-lg"
           }`}
           onClick={handleAsk}
           disabled={loading}
@@ -282,12 +291,12 @@ export default function HomePage() {
                <motion.span
                  animate={{ rotate: 360 }}
                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                 className="inline-block w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full"
+                 className="inline-block w-3 h-3 border-2 border-white/80 border-t-transparent rounded-full"
                />
-               推演中
+               推演中...
              </span>
           ) : "今日问"}
-        </button>
+        </motion.button>
         </div>
       </motion.section>
 
@@ -371,9 +380,9 @@ export default function HomePage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="text-center"
+        className="text-center pt-4"
       >
-        <Link className="text-sm text-gray-400 hover:text-emerald-600 transition-colors border-b border-transparent hover:border-emerald-600 pb-0.5" href="/history">
+        <Link className="text-xs text-stone-400 hover:text-emerald-600 transition-all duration-300 border-b border-transparent hover:border-emerald-600 pb-0.5 tracking-widest font-serif inline-block hover:-translate-y-0.5" href="/history">
           查看历史记录
         </Link>
       </motion.div>
@@ -458,6 +467,7 @@ export default function HomePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </main>
   );
 }

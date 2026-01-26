@@ -5,4 +5,16 @@
 body {
   color: #1B1B1B;
   background: #F6F7F9;
+  overflow-x: hidden;
+}
+
+@keyframes gradient-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-bg 15s ease infinite;
 }
