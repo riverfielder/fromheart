@@ -28,6 +28,8 @@ export default function HomePage() {
   const [showDonation, setShowDonation] = useState(false);
   const [blessing, setBlessing] = useState<string | null>(null);
   const [showQR, setShowQR] = useState<"none" | "wechat" | "alipay">("none");
+  const [showToast, setShowToast] = useState(false);
+  const [wiggleIncense, setWiggleIncense] = useState(false);
 
   useEffect(() => {
     getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
@@ -61,7 +63,13 @@ export default function HomePage() {
       setResult(res.result);
       setDivinationId(res.divination_id);
       setUsageCount(res.usage_count);
-      alert("气运能量 -1");
+      
+      // Trigger animations
+      setShowToast(true);
+      setWiggleIncense(true);
+      setTimeout(() => setShowToast(false), 2500);
+      setTimeout(() => setWiggleIncense(false), 1000);
+
     } catch (err: any) {
       if (err.message === "daily_limit_reached") {
         setError("不可贪念天机");
@@ -85,12 +93,38 @@ export default function HomePage() {
 
   return (
     <main className="space-y-8 max-w-lg mx-auto p-4 sm:p-6 relative">
+      {/* Energy Toast */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: -50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          >
+            <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-emerald-100 flex items-center gap-3 ring-1 ring-emerald-50">
+               <span className="text-xl animate-bounce">🌩️</span>
+               <span className="text-sm font-serif text-emerald-900 tracking-widest font-medium">气运能量降低</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Incense Icon */}
       <motion.div 
         className="absolute top-4 right-4 cursor-pointer z-10"
         onClick={handleOpenDonation}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 + (usageCount * 0.25) }}
+        animate={{ 
+          opacity: 0.3 + (usageCount * 0.25),
+          scale: wiggleIncense ? [1, 1.4, 0.9, 1.1, 1] : 1,
+          rotate: wiggleIncense ? [0, -15, 15, -10, 10, 0] : 0,
+        }}
+        transition={{ 
+           opacity: { duration: 0.5 },
+           scale: { duration: 0.6, type: "spring" },
+           rotate: { duration: 0.5 }
+        }}
         whileHover={{ scale: 1.1 }}
       >
         <div className="flex flex-col items-center">
