@@ -93,7 +93,7 @@ export default function HomePage() {
       // Trigger animations
       setShowToast(true);
       setWiggleIncense(true);
-      setTimeout(() => setShowToast(false), 4000);
+      setTimeout(() => setShowToast(false), 1800);
       setTimeout(() => setWiggleIncense(false), 1000);
 
     } catch (err: any) {
@@ -277,27 +277,40 @@ export default function HomePage() {
         <AnimatePresence>
           {showToast && (
             <motion.div
-              initial={{ opacity: 0, x: 0, y: 0, scale: 0.5 }}
+              initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
               animate={{ 
-                opacity: [0, 0.8, 0],
-                x: 180, 
-                y: -300,
-                scale: [0.5, 1.5, 0]
+                opacity: [0, 1, 1, 0],
+                x: 160, 
+                y: -320,
+                scale: [0.5, 1.5, 0.8, 0]
               }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 2.5, ease: "easeInOut", times: [0, 0.2, 1] }}
-              className="absolute left-[35%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none"
+              transition={{ duration: 1.5, ease: "easeInOut", times: [0, 0.1, 0.8, 1] }}
+              className="absolute left-[40%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
             >
-               <div className="relative w-20 h-20">
-                  <motion.div 
-                     animate={{ rotate: 180 }}
-                     transition={{ duration: 3, ease: "linear", repeat: Infinity }}
-                     className="absolute inset-0 bg-emerald-100/60 rounded-full blur-xl"
+               <div className="relative w-8 h-8 flex items-center justify-center">
+                  {/* Outer Glow */}
+                  <motion.div
+                     animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0.8, 0.5] }}
+                     transition={{ duration: 0.4, repeat: Infinity }}
+                     className="absolute w-8 h-8 bg-orange-400/30 rounded-full blur-md"
                   />
+                  {/* Flame Core */}
                   <motion.div 
-                     animate={{ rotate: -180 }}
-                     transition={{ duration: 4, ease: "linear", repeat: Infinity }}
-                     className="absolute inset-2 bg-white/70 rounded-full blur-lg"
+                     animate={{ 
+                        scale: [1, 1.1, 0.95, 1],
+                        rotate: [-5, 5, -2, 2, 0],
+                        height: ["24px", "28px", "24px"]
+                     }}
+                     transition={{ duration: 0.6, repeat: Infinity }}
+                     className="w-4 h-6 bg-gradient-to-t from-red-500 via-orange-400 to-yellow-200 rounded-full rounded-t-[50%] shadow-[0_0_10px_rgba(255,165,0,0.6)] blur-[0.5px]"
+                     style={{ borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%" }}
+                  />
+                  {/* Spark */}
+                  <motion.div 
+                     animate={{ y: [-5, -20], x: [0, 5], opacity: [1, 0] }}
+                     transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
+                     className="absolute top-0 w-1 h-1 bg-yellow-100 rounded-full blur-[0.5px]"
                   />
                </div>
             </motion.div>
