@@ -146,8 +146,8 @@ export default function HomePage() {
                        </div>
                        
                        <div className="relative w-48 h-48 mx-auto bg-gray-50 rounded-lg p-2 border border-gray-100">
-                          {showQR === "wechat" && <Image src="/wechat.jpg" alt="WeChat Pay" fill className="object-contain" />}
-                          {showQR === "alipay" && <Image src="/alipay.jpg" alt="Alipay" fill className="object-contain" />}
+                          {showQR === "wechat" && <Image src="/weixin.png" alt="WeChat Pay" fill className="object-contain" />}
+                          {showQR === "alipay" && <Image src="/zfb.jpg" alt="Alipay" fill className="object-contain" />}
                        </div>
                        <p className="text-[10px] text-gray-400 mt-2">心诚则灵，随缘施舍</p>
                      </motion.div>
