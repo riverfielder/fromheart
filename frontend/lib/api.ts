@@ -1,4 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080";
+// Use current origin by default (empty string), enabling reverse proxying
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 
 export async function askQuestion(question: string, deviceHash: string) {
   const res = await fetch(`${API_BASE}/api/question`, {

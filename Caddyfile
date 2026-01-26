@@ -1,0 +1,16 @@
+{
+	# Global options
+}
+
+{$DOMAIN:localhost} {
+	# Enable Gzip compression
+	encode gzip
+
+	# Proxy API requests to Go backend
+	reverse_proxy /api/* backend:8080
+
+	# Proxy all other requests to Next.js frontend
+	reverse_proxy * frontend:3000
+
+	# Automatic HTTPS is handled by Caddy when a valid domain is provided
+}
