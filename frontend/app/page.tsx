@@ -72,10 +72,11 @@ export default function HomePage() {
 
     } catch (err: any) {
       if (err.message === "daily_limit_reached") {
-        setError("不可贪念天机");
+        setError("不可贪多");
       } else {
-        setError("请求失败，请稍后重试");
+        setError("请求失败");
       }
+      setTimeout(() => setError(null), 3000);
     } finally {
       setLoading(false);
     }
@@ -105,6 +106,23 @@ export default function HomePage() {
             <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-emerald-100 flex items-center gap-3 ring-1 ring-emerald-50">
                <span className="text-xl animate-bounce">🌩️</span>
                <span className="text-sm font-serif text-emerald-900 tracking-widest font-medium">气运能量降低</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Toast */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: -50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-36 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          >
+            <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-stone-200 flex items-center gap-3 ring-1 ring-stone-100">
+               <span className="text-xl opacity-80">🍃</span>
+               <span className="text-sm font-serif text-stone-600 tracking-widest font-medium">{error}</span>
             </div>
           </motion.div>
         )}
@@ -248,15 +266,6 @@ export default function HomePage() {
           ) : "今日问"}
         </button>
         </div>
-        {error && (
-          <motion.p 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-100"
-          >
-            {error}
-          </motion.p>
-        )}
       </motion.section>
 
       <AnimatePresence mode="wait">
