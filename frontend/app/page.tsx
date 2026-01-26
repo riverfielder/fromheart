@@ -426,7 +426,7 @@ export default function HomePage() {
       >
          <p 
             onClick={() => setShowDevModal(true)}
-            className="text-[10px] text-gray-300 font-serif tracking-widest opacity-60 hover:opacity-100 transition-opacity select-none cursor-pointer"
+            className="text-[10px] text-emerald-900/40 font-serif tracking-widest hover:text-emerald-700 transition-colors select-none cursor-pointer"
          >
             River
          </p>
