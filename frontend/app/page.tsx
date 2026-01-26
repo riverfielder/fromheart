@@ -34,6 +34,22 @@ export default function HomePage() {
   const [devSecret, setDevSecret] = useState("");
   const [devModeActive, setDevModeActive] = useState(false);
   const [devToast, setDevToast] = useState<string | null>(null);
+  const [loadingText, setLoadingText] = useState("推演中");
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (loading) {
+      const texts = ["沐浴焚香", "诚心起卦", "推演天机", "撰写卦辞", "云开雾散"];
+      let i = 0;
+      setLoadingText(texts[0]);
+      interval = setInterval(() => {
+        i = (i + 1) % texts.length;
+        if (i === texts.length - 1) clearInterval(interval); // Stop at last step
+        setLoadingText(texts[i]);
+      }, 3000); // Change every 3 seconds
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
@@ -290,10 +306,12 @@ export default function HomePage() {
              <span className="flex items-center gap-2">
                <motion.span
                  animate={{ rotate: 360 }}
-                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                 className="inline-block w-3 h-3 border-2 border-white/80 border-t-transparent rounded-full"
-               />
-               推演中...
+                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                 className="inline-block w-4 h-4"
+               >
+                 <Image src="/bagua.svg" alt="loading" width={16} height={16} className="opacity-80" />
+               </motion.span>
+               <span>{loadingText}...</span>
              </span>
           ) : "今日问"}
         </motion.button>
