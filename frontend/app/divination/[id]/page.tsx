@@ -76,10 +76,3 @@ export default function DivinationDetailPage() {
     </main>
   );
 }
-
-          <li>忌讳：避免冲动</li>
-        </ul>
-      </section>
-    </main>
-  );
-}
