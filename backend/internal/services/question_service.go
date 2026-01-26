@@ -79,7 +79,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 
 func (s *QuestionService) GetDivination(ctx context.Context, id uint) (db.Divination, error) {
 	var div db.Divination
-	if err := s.postgres.First(&div, id).Error; err != nil {
+	if err := s.postgres.Preload("DailyQuestion").First(&div, id).Error; err != nil {
 		return div, err
 	}
 	return div, nil

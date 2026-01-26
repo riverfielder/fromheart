@@ -21,4 +21,5 @@ type Divination struct {
 	RawOutput       string `gorm:"type:text"`
 	FinalOutput     string `gorm:"type:text"`
 	CreatedAt       time.Time
+	DailyQuestion   *DailyQuestion `json:"daily_question,omitempty" gorm:"foreignKey:DailyQuestionID"`
 }
