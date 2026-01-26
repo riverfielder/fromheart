@@ -45,7 +45,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		return AskResponse{}, err
 	}
 	if count >= 3 {
-		return AskResponse{}, services.ErrDailyLimitReached
+		return AskResponse{}, ErrDailyLimitReached
 	}
 
 	result := divination.Generate(req.Question)
