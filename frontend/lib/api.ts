@@ -1,11 +1,11 @@
 // Use current origin by default (empty string), enabling reverse proxying
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 
-export async function askQuestion(question: string, deviceHash: string) {
+export async function askQuestion(question: string, deviceHash: string, secret?: string) {
   const res = await fetch(`${API_BASE}/api/question`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, device_hash: deviceHash }),
+    body: JSON.stringify({ question, device_hash: deviceHash, secret }),
   });
   if (!res.ok) {
     if (res.status === 403) {

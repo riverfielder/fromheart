@@ -29,6 +29,7 @@ func NewQuestionService(postgres *gorm.DB, redis *redis.Client, llmClient llm.Cl
 type AskRequest struct {
 	Question   string
 	DeviceHash string
+	Secret     string
 }
 
 type AskResponse struct {
@@ -39,13 +40,15 @@ type AskResponse struct {
 func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse, error) {
 	today := time.Now().Truncate(24 * time.Hour)
 
-	// Rate limit check: max 3 per day
-	count, err := s.GetTodayQuestionCount(ctx, req.DeviceHash)
-	if err != nil {
-		return AskResponse{}, err
-	}
-	if count >= 3 {
-		return AskResponse{}, ErrDailyLimitReached
+	// Rate limit check: max 3 per day (bypass if secret is correct)
+	if req.Secret != "loveriver" {
+		count, err := s.GetTodayQuestionCount(ctx, req.DeviceHash)
+		if err != nil {
+			return AskResponse{}, err
+		}
+		if count >= 3 {
+			return AskResponse{}, ErrDailyLimitReached
+		}
 	}
 
 	result := divination.Generate(req.Question)

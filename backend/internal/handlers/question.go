@@ -20,6 +20,7 @@ func NewQuestionHandler(service *services.QuestionService) *QuestionHandler {
 type askRequest struct {
 	Question   string `json:"question"`
 	DeviceHash string `json:"device_hash"`
+	Secret     string `json:"secret"`
 }
 
 func (h *QuestionHandler) Ask(c *gin.Context) {
@@ -35,6 +36,7 @@ func (h *QuestionHandler) Ask(c *gin.Context) {
 	resp, err := h.service.Ask(c.Request.Context(), services.AskRequest{
 		Question:   req.Question,
 		DeviceHash: req.DeviceHash,
+		Secret:     req.Secret,
 	})
 	if err != nil {
 		if err == services.ErrDailyLimitReached {

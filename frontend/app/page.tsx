@@ -30,9 +30,18 @@ export default function HomePage() {
   const [showQR, setShowQR] = useState<"none" | "wechat" | "alipay">("none");
   const [showToast, setShowToast] = useState(false);
   const [wiggleIncense, setWiggleIncense] = useState(false);
+  const [showDevModal, setShowDevModal] = useState(false);
+  const [devSecret, setDevSecret] = useState("");
+  const [devModeActive, setDevModeActive] = useState(false);
+  const [devToast, setDevToast] = useState<string | null>(null);
 
   useEffect(() => {
     getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
+
+    // Check dev mode
+    if (window.localStorage.getItem("fh_secret") === "loveriver") {
+      setDevModeActive(true);
+    }
 
     const key = "fh_device";
     const stored = window.localStorage.getItem(key);
@@ -59,7 +68,8 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await askQuestion(question.trim(), deviceHash);
+      const secret = window.localStorage.getItem("fh_secret") || undefined;
+      const res = await askQuestion(question.trim(), deviceHash, secret);
       setResult(res.result);
       setDivinationId(res.divination_id);
       setUsageCount(res.usage_count);
@@ -89,6 +99,19 @@ export default function HomePage() {
          const res = await getBlessing();
          setBlessing(res.blessing);
        } catch {}
+    }
+  };
+
+  const handleDevSubmit = () => {
+    if (devSecret === "loveriver") {
+      window.localStorage.setItem("fh_secret", "loveriver");
+      setDevModeActive(true);
+      setShowDevModal(false);
+      setDevToast("天机已开");
+      setTimeout(() => setDevToast(null), 3000);
+    } else {
+      setDevToast("机缘未到");
+      setTimeout(() => setDevToast(null), 3000);
     }
   };
 
@@ -369,16 +392,72 @@ export default function HomePage() {
         </motion.footer>
       )}
 
+      {/* Dev Mode Toast */}
+      <AnimatePresence>
+        {devToast && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          >
+            <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-emerald-100 flex items-center gap-3 ring-1 ring-emerald-50">
+               <span className="text-xl">🗝️</span>
+               <span className="text-sm font-serif text-emerald-900 tracking-widest font-medium">{devToast}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
         className="text-center pb-4 mt-8"
       >
-         <p className="text-[10px] text-gray-300 font-serif tracking-widest opacity-60 hover:opacity-100 transition-opacity select-none cursor-default">
+         <p 
+            onClick={() => setShowDevModal(true)}
+            className="text-[10px] text-gray-300 font-serif tracking-widest opacity-60 hover:opacity-100 transition-opacity select-none cursor-pointer"
+         >
             River
          </p>
       </motion.div>
+
+      {/* Dev Modal */}
+      <AnimatePresence>
+        {showDevModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowDevModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white/95 backdrop-blur rounded-2xl p-6 w-full max-w-[280px] space-y-4 shadow-2xl border border-white/40"
+              onClick={e => e.stopPropagation()}
+            >
+               <h3 className="text-center text-sm font-serif text-gray-500 tracking-widest">开发者模式</h3>
+               <input 
+                 type="password"
+                 value={devSecret}
+                 onChange={(e) => setDevSecret(e.target.value)}
+                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-center text-sm focus:outline-none focus:border-emerald-300 focus:bg-white transition-all"
+                 placeholder="输入密钥"
+               />
+               <button 
+                 onClick={handleDevSubmit}
+                 className="w-full py-2 bg-emerald-600 text-white rounded-lg text-xs tracking-wider hover:bg-emerald-700 transition-colors"
+               >
+                 确认
+               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
