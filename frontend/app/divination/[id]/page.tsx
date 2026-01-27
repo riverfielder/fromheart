@@ -54,7 +54,14 @@ export default function DivinationDetailPage() {
         setData(res);
         if (res.RawOutput) {
           try {
-            const parsed = JSON.parse(res.RawOutput);
+            // Robust JSON parsing: clean markdown or extra text
+            let rawStr = res.RawOutput.trim();
+            const start = rawStr.indexOf('{');
+            const end = rawStr.lastIndexOf('}');
+            if (start !== -1 && end !== -1 && end > start) {
+                rawStr = rawStr.substring(start, end + 1);
+            }
+            const parsed = JSON.parse(rawStr);
             setParsedRaw(parsed);
           } catch (e) {
             console.error("Failed to parse output", e);
