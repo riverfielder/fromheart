@@ -299,10 +299,10 @@ func (s *QuestionService) Chat(ctx context.Context, divinationID uint, message s
 	if err != nil {
 		return "", err
 	}
-	
+
 	// 2. Build system prompt / context
 	var messages []map[string]string
-	
+
 	// 2.1 System Role
 	messages = append(messages, map[string]string{
 		"role": "system",
@@ -316,24 +316,24 @@ func (s *QuestionService) Chat(ctx context.Context, divinationID uint, message s
 动爻：%s
 卦辞总结：%s
 
-请针对用户的后续提问进行解答。回答要继续保持大师风范，语气平和、玄妙但又充满关怀。不要重复之前的卦辞，而是针对新问题进行延伸解读。`, 
-		div.DailyQuestion.QuestionText, div.BenGua, div.BianGua, div.ChangingLines, div.FinalOutput),
+请针对用户的后续提问进行解答。回答要继续保持大师风范，语气平和、玄妙但又充满关怀。不要重复之前的卦辞，而是针对新问题进行延伸解读。`,
+			div.DailyQuestion.QuestionText, div.BenGua, div.BianGua, div.ChangingLines, div.FinalOutput),
 	})
-	
+
 	// 2.2 Append conversation history
 	for _, msg := range history {
 		messages = append(messages, map[string]string{
-			"role": msg.Role,
+			"role":    msg.Role,
 			"content": msg.Content,
 		})
 	}
-	
+
 	// 2.3 Append current user message
 	messages = append(messages, map[string]string{
-		"role": "user",
+		"role":    "user",
 		"content": message,
 	})
-	
+
 	// 3. Call LLM
 	return s.llm.Chat(ctx, messages)
 }

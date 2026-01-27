@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import Image from "next/image";
 import { Output } from "../types";
+import Hexagram from "./Hexagram";
 
 interface ShareModalProps {
   show: boolean;
@@ -82,6 +83,19 @@ export default function ShareModal({ show, onClose, result, poem }: ShareModalPr
                     <h3 className="text-2xl font-serif text-gray-900 leading-relaxed font-medium">
                       {result.direct_answer}
                     </h3>
+                 </div>
+
+                 {/* Hexagram Visuals */}
+                 <div className="flex items-center justify-center space-x-8 py-2">
+                    <div className="flex flex-col items-center gap-2">
+                        <Hexagram name={result.ben_gua} size="sm" />
+                        <span className="text-[10px] text-stone-500 font-serif tracking-widest">{result.ben_gua}</span>
+                    </div>
+                    <span className="text-stone-300 font-light text-sm">→</span>
+                    <div className="flex flex-col items-center gap-2">
+                        <Hexagram name={result.bian_gua} size="sm" />
+                        <span className="text-[10px] text-stone-500 font-serif tracking-widest">{result.bian_gua}</span>
+                    </div>
                  </div>
                  
                  {/* Poem */}

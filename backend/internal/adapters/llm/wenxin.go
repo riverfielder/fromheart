@@ -297,7 +297,7 @@ func (w *WenxinClient) Chat(ctx context.Context, history []map[string]string) (s
 	}
 
 	payload := map[string]interface{}{
-		"model": w.model,
+		"model":    w.model,
 		"messages": history,
 	}
 

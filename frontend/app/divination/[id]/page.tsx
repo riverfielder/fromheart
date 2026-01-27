@@ -98,9 +98,14 @@ export default function DivinationDetailPage() {
               </div>
             </div>
             
-             <p className="text-[10px] text-center text-stone-400/80 font-serif tracking-widest pb-2 border-b border-stone-100">
-                — 此卦基于梅花易数，取“年月日时”、“字数”与“问意”推演 —
-            </p>
+             <div className="bg-stone-50/80 p-3 rounded-lg border border-stone-100 mb-4 text-center">
+                <p className="text-secondary text-xs font-serif text-stone-500">
+                    — 此卦推演依据 —
+                </p>
+                <p className="text-xs text-stone-600 mt-1">
+                   梅花易数 · 以先天之数起卦 · 结合时空与心念
+                </p>
+            </div>
 
             {data.ChangingLines && (
                <div className="text-sm text-emerald-600 mt-2 text-center">
