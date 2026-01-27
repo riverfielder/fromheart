@@ -66,7 +66,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		if err := s.postgres.
 			Preload("Divination").
 			Where("embedding IS NOT NULL").
-			Order("embedding <-> ?", pgvector.NewVector(vec)).
+			Order(gorm.Expr("embedding <-> ?", pgvector.NewVector(vec))).
 			Limit(2).
 			Find(&similar).Error; err == nil {
 
