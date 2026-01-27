@@ -58,7 +58,7 @@ export default function DivinationDetailPage() {
             <h2 className="text-xs font-medium text-stone-400 uppercase tracking-wide">
               卦象推演
             </h2>
-            <div className="flex items-center space-x-6 text-lg font-serif">
+            <div className="flex items-center space-x-6 text-lg font-serif justify-center py-4 bg-stone-50/50 rounded-xl">
               <div className="flex flex-col items-center gap-2">
                 <Hexagram name={data.BenGua} />
                 <span>{data.BenGua}</span>
@@ -71,8 +71,13 @@ export default function DivinationDetailPage() {
                 <span className="text-xs text-stone-400">变卦</span>
               </div>
             </div>
+            
+             <p className="text-[10px] text-center text-stone-400/80 font-serif tracking-widest pb-2 border-b border-stone-100">
+                — 此卦基于梅花易数，取“年月日时”、“字数”与“问意”推演 —
+            </p>
+
             {data.ChangingLines && (
-               <div className="text-sm text-emerald-600 mt-2">
+               <div className="text-sm text-emerald-600 mt-2 text-center">
                   动爻：{data.ChangingLines}
                </div>
             )}

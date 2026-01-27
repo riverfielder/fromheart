@@ -40,18 +40,23 @@ export default function ResultDisplay({ result, divinationId }: ResultDisplayPro
       </div>
 
        {/* Hexagram Display */}
-       <div className="flex items-center justify-center space-x-8 py-4 bg-stone-50/50 rounded-xl mb-6">
-        <div className="flex flex-col items-center gap-2">
-           <Hexagram name={result.ben_gua} size="md" />
-           <span className="font-serif text-lg">{result.ben_gua}</span>
-           <span className="text-xs text-stone-400">本卦</span>
+       <div className="mb-6">
+         <div className="flex items-center justify-center space-x-8 py-4 bg-stone-50/50 rounded-xl mb-2">
+          <div className="flex flex-col items-center gap-2">
+             <Hexagram name={result.ben_gua} size="md" />
+             <span className="font-serif text-lg">{result.ben_gua}</span>
+             <span className="text-xs text-stone-400">本卦</span>
+          </div>
+          <div className="text-stone-300">→</div>
+          <div className="flex flex-col items-center gap-2">
+             <Hexagram name={result.bian_gua} size="md" />
+             <span className="font-serif text-lg">{result.bian_gua}</span>
+             <span className="text-xs text-stone-400">变卦</span>
+          </div>
         </div>
-        <div className="text-stone-300">→</div>
-        <div className="flex flex-col items-center gap-2">
-           <Hexagram name={result.bian_gua} size="md" />
-           <span className="font-serif text-lg">{result.bian_gua}</span>
-           <span className="text-xs text-stone-400">变卦</span>
-        </div>
+        <p className="text-[10px] text-center text-stone-400/80 font-serif tracking-widest">
+            — 此卦基于梅花易数，取“年月日时”、“字数”与“问意”推演 —
+        </p>
       </div>
 
       {result.colloquial_explanation && (
