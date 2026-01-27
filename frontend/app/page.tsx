@@ -270,8 +270,7 @@ export default function HomePage() {
               if (loading) return;
               if (pressProgress < 100) {
                  // Trigger directly on click
-                 const ask = handleAsk();
-                 ask();
+                 handleAsk();
               }
           }}
           className={`px-8 py-3 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden select-none tap-highlight-transparent ${
