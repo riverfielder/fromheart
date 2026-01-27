@@ -64,13 +64,18 @@ export default function RegisterPage() {
         </div>
         <button
           type="submit"
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-stone-800 hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500"
+          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-stone-800 hover:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500"
         >
           注册
         </button>
       </form>
-      <div className="mt-4 text-center text-sm text-stone-600">
-        已有账号？ <Link href="/login" className="text-stone-900 underline">去登录</Link>
+      <div className="mt-6 text-center text-sm font-serif">
+         <p className="text-stone-500 mb-2">
+            注册即刻开启<span className="text-emerald-700 font-bold">八字命理</span>与<span className="text-emerald-700 font-bold">性格特质</span>结合的深度推演。
+         </p>
+         <p className="text-stone-500">
+             已有账号? <Link href="/login" className="text-stone-800 underline">登录</Link>
+         </p>
       </div>
     </div>
   );

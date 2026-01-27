@@ -90,7 +90,7 @@ export default function DivinationDetailPage() {
       <ShareModal 
         show={showShare} 
         onClose={() => setShowShare(false)} 
-        result={parsedRaw} 
+        result={parsedRaw && data ? { ...parsedRaw, ben_gua: data.BenGua, bian_gua: data.BianGua } : parsedRaw} 
         poem={poem}
       />
 

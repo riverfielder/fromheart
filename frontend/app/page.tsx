@@ -219,6 +219,20 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
+      {/* Profile Icon */}
+      <Link href="/profile" className="absolute top-4 left-4 cursor-pointer z-10 group no-underline">
+        <motion.div 
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           transition={{ duration: 0.5 }}
+           whileHover={{ scale: 1.1 }}
+           className="flex flex-col items-center relative"
+        >
+            <span className="text-2xl filter drop-shadow-md relative z-10 opacity-90">👤</span>
+            <span className="text-[10px] text-stone-500 font-serif relative z-10 mt-1">命理</span>
+        </motion.div>
+      </Link>
+
       {/* Incense Icon */}
       <motion.div 
         className="absolute top-4 right-4 cursor-pointer z-10 group"

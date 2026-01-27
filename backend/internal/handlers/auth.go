@@ -113,3 +113,43 @@ func (h *AuthHandler) Me(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
+
+type UpdateProfileRequest struct {
+	BirthDateStr string `json:"birth_date_str"`
+	Gender       string `json:"gender"` // male, female, other
+	MBTI         string `json:"mbti"`
+	Zodiac       string `json:"zodiac"`
+}
+
+func (h *AuthHandler) UpdateProfile(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user db.User
+	if err := h.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Update fields
+	user.BirthDateStr = req.BirthDateStr
+	user.Gender = req.Gender
+	user.MBTI = req.MBTI
+	user.Zodiac = req.Zodiac
+
+	if err := h.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user})
+}

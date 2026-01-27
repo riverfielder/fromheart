@@ -10,6 +10,13 @@ type User struct {
 	ID           uint      `gorm:"primaryKey" json:"id"`
 	Username     string    `gorm:"uniqueIndex" json:"username"`
 	PasswordHash string    `json:"-"`
+	
+	// Profile fields
+	BirthDateStr string    `json:"birth_date_str"` // YYYY-MM-DD
+	Gender       string    `json:"gender"`         // male/female/other
+	MBTI         string    `json:"mbti"`
+	Zodiac       string    `json:"zodiac"`
+	
 	CreatedAt    time.Time `json:"created_at"`
 }
 

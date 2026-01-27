@@ -149,3 +149,18 @@ export async function chat(id: number, message: string, history: ChatMessage[]) 
   }
   return res.json();
 }
+
+export async function updateProfile(data: {
+  birth_date?: string;
+  gender?: string;
+  mbti?: string;
+  zodiac?: string;
+}) {
+  const res = await fetch(`${API_BASE}/api/me`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Update failed");
+  return res.json();
+}

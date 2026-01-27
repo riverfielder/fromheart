@@ -15,7 +15,7 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 	r.Use(middleware.RateLimit())
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Header("Access-Control-Max-Age", "86400")
 		if c.Request.Method == http.MethodOptions {
@@ -34,6 +34,7 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 
 		// Me requires auth
 		api.GET("/me", middleware.RequireAuthMiddleware(), authHandler.Me)
+		api.PUT("/me", middleware.RequireAuthMiddleware(), authHandler.UpdateProfile)
 
 		api.POST("/question", handler.Ask)
 		api.GET("/divination/:id", handler.GetDivination)

@@ -37,3 +37,12 @@ export type PoemResponse = {
 export type UsageResponse = {
   count: number;
 };
+
+export type User = {
+  id: number;
+  username: string;
+  birth_date?: string;
+  gender?: string;
+  mbti?: string;
+  zodiac?: string;
+};

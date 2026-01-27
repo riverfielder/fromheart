@@ -40,6 +40,25 @@ func (w *WenxinClient) GenerateAnswer(ctx context.Context, req GenerateRequest) 
 		return "", errors.New("missing WENXIN_MODEL")
 	}
 
+	// Construct User Persona Description
+	var userDesc string
+	if req.UserProfile.Gender != "" || req.UserProfile.Zodiac != "" || req.UserProfile.MBTI != "" {
+		userDesc = "【求测者画像】\n"
+		if req.UserProfile.Gender != "" {
+			userDesc += fmt.Sprintf("- 性别：%s\n", req.UserProfile.Gender)
+		}
+		if req.UserProfile.BirthDateStr != "" {
+			userDesc += fmt.Sprintf("- 生辰：%s\n", req.UserProfile.BirthDateStr)
+		}
+		if req.UserProfile.Zodiac != "" {
+			userDesc += fmt.Sprintf("- 星座：%s\n", req.UserProfile.Zodiac)
+		}
+		if req.UserProfile.MBTI != "" {
+			userDesc += fmt.Sprintf("- MBTI心性：%s\n", req.UserProfile.MBTI)
+		}
+		userDesc += "请结合求测者的个人画像（如MBTI思维模式、命理特质等）进行定制化解读，使建议更贴合其本心。\n"
+	}
+
 	payload := map[string]interface{}{
 		"model": w.model,
 		"messages": []map[string]string{
@@ -60,7 +79,7 @@ direct_answer 风格必须晦涩高深、玄妙莫测，如古代签文般充满
 {
   "direct_answer": "...",
   "summary": "基于卦象的详细结构化解读（涉及数字必须使用汉字，如初、二、三...）",
-  "colloquial_explanation": "用通俗易懂的大白话解释卦象含义，针对用户的问题给出直白的结论，就像老朋友聊天一样亲切。",
+  "colloquial_explanation": "用通俗易懂的大白话解释卦象含义，针对用户的问题给出直白的结论，就像老朋友聊天一样亲切。若有用户画像信息，请结合其特质（如MBTI、星座）给予更贴心的指引。",
   "advice": ["建议1", "建议2", ...],
   "warnings": ["忌讳1", "忌讳2", ...],
   "keywords": ["关键词1", "关键词2", ...]
@@ -68,7 +87,7 @@ direct_answer 风格必须晦涩高深、玄妙莫测，如古代签文般充满
 			},
 			{
 				"role":    "user",
-				"content": fmt.Sprintf("问题：%s\n本卦：%s\n变卦：%s\n动爻：%s\n%s\n请给出JSON格式的解读。", req.Question, req.BenGua, req.BianGua, req.ChangingLines, formatContext(req.Context)),
+				"content": fmt.Sprintf("问题：%s\n%s本卦：%s\n变卦：%s\n动爻：%s\n%s\n请给出JSON格式的解读。", req.Question, userDesc, req.BenGua, req.BianGua, req.ChangingLines, formatContext(req.Context)),
 			},
 		},
 	}

@@ -120,12 +120,28 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		return AskResponse{}, err
 	}
 
+	// Fetch user profile if logged in
+	var userProfile llm.UserProfile
+	if req.UserID != nil {
+		var u db.User
+		if err := s.postgres.First(&u, *req.UserID).Error; err == nil {
+			userProfile = llm.UserProfile{
+				Name:         u.Username,
+				BirthDateStr: u.BirthDateStr,
+				Gender:       u.Gender,
+				MBTI:         u.MBTI,
+				Zodiac:       u.Zodiac,
+			}
+		}
+	}
+
 	raw, err := s.llm.GenerateAnswer(ctx, llm.GenerateRequest{
 		Question:      req.Question,
 		BenGua:        result.BenGua,
 		BianGua:       result.BianGua,
 		ChangingLines: result.ChangingLines,
 		Context:       contextStr, // Inject memory
+		UserProfile:   userProfile,
 	})
 	if err != nil {
 		return AskResponse{}, err
