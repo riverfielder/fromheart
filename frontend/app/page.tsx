@@ -266,33 +266,28 @@ export default function HomePage() {
         <motion.button
           whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.2)" }}
           whileTap={{ scale: 0.98 }}
-          onMouseDown={handlePressStart}
-          onMouseUp={handlePressEnd}
-          onMouseLeave={handlePressEnd}
-          onTouchStart={handlePressStart}
-          onTouchEnd={handlePressEnd}
-          className={`px-8 py-3 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+          onClick={() => {
+              if (loading) return;
+              if (pressProgress < 100) {
+                 // Trigger directly on click
+                 const ask = handleAsk();
+                 ask();
+              }
+          }}
+          className={`px-8 py-3 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden select-none tap-highlight-transparent ${
             loading 
               ? "bg-stone-50 text-stone-400 cursor-not-allowed border border-stone-100" 
               : "bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white shadow-emerald-200/50 shadow-lg"
           }`}
           disabled={loading}
         >
-          {/* Progress Fill Background */}
-          {!loading && pressProgress > 0 && (
-             <motion.div 
-               className="absolute inset-0 bg-white/20 z-0 origin-left"
-               initial={{ scaleX: 0 }}
-               animate={{ scaleX: pressProgress / 100 }}
-               transition={{ duration: 0.1 }}
-             />
-          )}
-
-          <span className="relative z-10">
+          {/* Progress Fill Background - Removed for Short Press */}
+          
+          <span className="relative z-10 select-none">
           {loading ? (
              "等待中..."
           ) : (
-             pressProgress > 0 ? ( pressProgress >= 100 ? "松开起卦" : "诚心..." ) : "诚心一问 (长按)"
+             "诚心一问"
           )}
           </span>
         </motion.button>
