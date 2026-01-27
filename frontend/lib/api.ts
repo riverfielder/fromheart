@@ -108,3 +108,15 @@ export async function getBlessing() {
   }
   return res.json();
 }
+
+export async function getAdminQuestions(secret: string) {
+  const res = await fetch(`${API_BASE}/api/admin/questions`, {
+    headers: {
+      "X-Admin-Secret": secret,
+    }
+  });
+  if (!res.ok) {
+    throw new Error("Unauthorized");
+  }
+  return res.json();
+}

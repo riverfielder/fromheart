@@ -411,19 +411,43 @@ export default function HomePage() {
               onClick={e => e.stopPropagation()}
             >
                <h3 className="text-center text-sm font-serif text-gray-500 tracking-widest">开发者模式</h3>
-               <input 
-                 type="password"
-                 value={devSecret}
-                 onChange={(e) => setDevSecret(e.target.value)}
-                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-center text-sm focus:outline-none focus:border-emerald-300 focus:bg-white transition-all"
-                 placeholder="输入密钥"
-               />
-               <button 
-                 onClick={handleDevSubmit}
-                 className="w-full py-2 bg-emerald-600 text-white rounded-lg text-xs tracking-wider hover:bg-emerald-700 transition-colors"
-               >
-                 确认
-               </button>
+               {!devModeActive ? (
+                 <>
+                   <input 
+                     type="password"
+                     value={devSecret}
+                     onChange={(e) => setDevSecret(e.target.value)}
+                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-center text-sm focus:outline-none focus:border-emerald-300 focus:bg-white transition-all"
+                     placeholder="输入密钥"
+                   />
+                   <button 
+                     onClick={handleDevSubmit}
+                     className="w-full py-2 bg-emerald-600 text-white rounded-lg text-xs tracking-wider hover:bg-emerald-700 transition-colors"
+                   >
+                     确认
+                   </button>
+                 </>
+               ) : (
+                 <div className="space-y-3">
+                    <div className="text-center py-2">
+                        <span className="text-2xl">👁️</span>
+                        <p className="text-xs text-emerald-600 mt-1 font-medium">天眼已开</p>
+                    </div>
+                    <Link href="/admin" className="block w-full py-2.5 bg-stone-800 text-white text-center rounded-lg text-xs tracking-wider shadow-md hover:bg-stone-700 transition-all">
+                      进入万象镜 (Admin)
+                    </Link>
+                    <button 
+                        onClick={() => {
+                            window.localStorage.removeItem("fh_secret");
+                            setDevModeActive(false);
+                            setShowDevModal(false);
+                        }} 
+                        className="w-full py-2 text-stone-400 text-xs hover:text-red-500 transition-colors"
+                    >
+                        关闭天眼
+                    </button>
+                 </div>
+               )}
             </motion.div>
           </motion.div>
         )}

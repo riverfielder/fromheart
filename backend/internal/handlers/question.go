@@ -137,3 +137,22 @@ func (h *QuestionHandler) GetPoem(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"poem": poem})
 }
+
+func (h *QuestionHandler) AdminAllHistory(c *gin.Context) {
+	secret := c.GetHeader("X-Admin-Secret")
+	if secret == "" {
+		secret = c.Query("secret")
+	}
+
+	questions, err := h.service.GetAllQuestions(c.Request.Context(), secret)
+	if err != nil {
+		if err.Error() == "unauthorized" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"items": questions})
+}

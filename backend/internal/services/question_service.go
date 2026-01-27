@@ -220,3 +220,63 @@ func (s *QuestionService) GetTodayQuestionCount(ctx context.Context, deviceHash 
 func (s *QuestionService) GetBlessing(ctx context.Context) (string, error) {
 	return s.llm.GenerateBlessing(ctx)
 }
+
+type AdminQuestion struct {
+	ID           uint      `json:"id"`
+	QuestionText string    `json:"question_text"`
+	QuestionDate time.Time `json:"question_date"`
+	Username     string    `json:"username"`
+	IsGuest      bool      `json:"is_guest"`
+	Answer       string    `json:"answer"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+func (s *QuestionService) GetAllQuestions(ctx context.Context, secret string) ([]AdminQuestion, error) {
+	if secret != "loveriver" {
+		return nil, errors.New("unauthorized")
+	}
+
+	var results []AdminQuestion
+
+	// Join DailyQuestion with Divination and User
+	// Note: We need to handle cases where there might not be a divination yet (though unlikely in this flow)
+	// and cases where UserID is null (Guest)
+
+	rows, err := s.postgres.Table("daily_questions").
+		Select("daily_questions.id, daily_questions.question_text, daily_questions.question_date, daily_questions.created_at, users.username, divinations.final_output").
+		Joins("LEFT JOIN users ON users.id = daily_questions.user_id").
+		Joins("LEFT JOIN divinations ON divinations.daily_question_id = daily_questions.id").
+		Order("daily_questions.created_at desc").
+		Rows()
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var q AdminQuestion
+		var username *string
+		var answer *string
+
+		if err := rows.Scan(&q.ID, &q.QuestionText, &q.QuestionDate, &q.CreatedAt, &username, &answer); err != nil {
+			continue
+		}
+
+		if username != nil {
+			q.Username = *username
+			q.IsGuest = false
+		} else {
+			q.Username = "游客"
+			q.IsGuest = true
+		}
+
+		if answer != nil {
+			q.Answer = *answer
+		}
+
+		results = append(results, q)
+	}
+
+	return results, nil
+}

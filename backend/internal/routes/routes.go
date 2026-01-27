@@ -41,6 +41,7 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		api.GET("/poem", handler.GetPoem)
 		api.GET("/usage", handler.GetUsage)
 		api.GET("/blessing", handler.GetBlessing)
+		api.GET("/admin/questions", handler.AdminAllHistory)
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})
