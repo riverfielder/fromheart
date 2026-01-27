@@ -5,3 +5,7 @@ backend/.env
 node_modules/
 .next/
 vendor/
+
+# PWA
+**/public/sw.js
+**/public/workbox-*.js
