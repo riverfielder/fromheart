@@ -100,9 +100,15 @@ export default function ShareModal({ show, onClose, result, poem }: ShareModalPr
               <div className="w-full pt-6 border-t border-stone-200 flex justify-between items-end relative z-10">
                  <div className="text-left space-y-1">
                     <p className="text-[10px] text-gray-400">扫码问心</p>
-                     {/* Placeholder for QR Code - using a mock specific to the site url */}
+                     {/* Placeholder for QR Code */}
                     <div className="w-16 h-16 bg-white p-1 border border-stone-100">
-                       <Image src="/qrcode_placeholder.png" alt="QR" width={64} height={64} className="opacity-80" />
+                       {/* Using a simple open API to generate QR code for the current site */}
+                       <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${typeof window !== 'undefined' ? window.location.origin : 'https://github.com/riverfielder/fromheart'}&color=064e3b`} 
+                          alt="QR" 
+                          className="w-full h-full object-contain opacity-80" 
+                          crossOrigin="anonymous"
+                       />
                     </div>
                  </div>
                  <div className="text-right">
