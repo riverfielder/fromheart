@@ -32,6 +32,9 @@ export default function HomePage() {
   const [devModeActive, setDevModeActive] = useState(false);
   const [devToast, setDevToast] = useState<string | null>(null);
 
+  // Persistence State
+  const [isLoaded, setIsLoaded] = useState(false);
+
   // Ritual State
   const [pressProgress, setPressProgress] = useState(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
@@ -60,6 +63,33 @@ export default function HomePage() {
       .then(res => setUsageCount(res.count))
       .catch(() => {});
   }, []);
+
+  // Restore state from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem("fh_home_state");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.question) setQuestion(parsed.question);
+        if (parsed.result) setResult(parsed.result);
+        if (parsed.divinationId) setDivinationId(parsed.divinationId);
+      } catch (e) {
+        console.error("Failed to restore state", e);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    if (!isLoaded) return;
+    const state = {
+      question,
+      result,
+      divinationId
+    };
+    sessionStorage.setItem("fh_home_state", JSON.stringify(state));
+  }, [question, result, divinationId, isLoaded]);
 
   const handleAsk = async () => {
     if (!question.trim()) {

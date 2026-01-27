@@ -3,15 +3,20 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { getDivination, chat, ChatMessage } from "../../../lib/api";
+import { getDivination, chat, ChatMessage, getDailyPoem } from "../../../lib/api";
 import { Divination, Output } from "../../../types";
 import Hexagram from "../../../components/Hexagram";
+import ShareModal from "../../../components/ShareModal";
 
 export default function DivinationDetailPage() {
   const params = useParams();
   const [data, setData] = useState<Divination | null>(null);
   const [parsedRaw, setParsedRaw] = useState<Output | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Share state
+  const [showShare, setShowShare] = useState(false);
+  const [poem, setPoem] = useState<string | null>(null);
 
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -40,6 +45,8 @@ export default function DivinationDetailPage() {
   };
 
   useEffect(() => {
+    getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
+    
     const id = Number(params?.id);
     if (!id) return;
     getDivination(id)
@@ -59,11 +66,26 @@ export default function DivinationDetailPage() {
 
   return (
     <main className="space-y-6">
-      <header>
+      <header className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">卦象详情</h1>
+        {parsedRaw && (
+            <button 
+                onClick={() => setShowShare(true)}
+                className="text-xs text-emerald-600/80 hover:text-emerald-700 font-serif tracking-wider border border-emerald-600/20 hover:border-emerald-600/50 px-3 py-1.5 rounded-full transition-all flex items-center gap-1 bg-emerald-50/30"
+            >
+                <span>📷</span> 分享
+            </button>
+        )}
       </header>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
+      
+      <ShareModal 
+        show={showShare} 
+        onClose={() => setShowShare(false)} 
+        result={parsedRaw} 
+        poem={poem}
+      />
 
       {data && (
         <div className="space-y-6">
