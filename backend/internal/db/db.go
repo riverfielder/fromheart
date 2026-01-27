@@ -18,7 +18,7 @@ func NewPostgres(cfg config.Config) *gorm.DB {
 	// Enable pgvector extension
 	db.Exec("CREATE EXTENSION IF NOT EXISTS vector")
 
-	if err := db.AutoMigrate(&DailyQuestion{}, &Divination{}); err != nil {
+	if err := db.AutoMigrate(&DailyQuestion{}, &Divination{}, &User{}); err != nil {
 		log.Fatal(err)
 	}
 	return db

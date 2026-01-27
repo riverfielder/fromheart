@@ -1,5 +1,8 @@
 import "./globals.css";
+import React, { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
+import { Providers } from "./providers";
+import Header from "./components/Header";
 
 export const viewport: Viewport = {
   themeColor: "#F5F5F4",
@@ -24,18 +27,20 @@ export const metadata: Metadata = {
   },
 };
 
-
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <html lang="zh-CN">
       <body className="min-h-screen">
-        <div className="max-w-3xl mx-auto px-6 py-10">
-          {children}
-        </div>
+        <Providers>
+          <div className="max-w-3xl mx-auto px-6 py-10">
+            <Header />
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );

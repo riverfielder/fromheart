@@ -33,6 +33,7 @@ type AskRequest struct {
 	Question   string
 	DeviceHash string
 	Secret     string
+	UserID     *uint
 }
 
 type AskResponse struct {
@@ -45,7 +46,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 
 	// Rate limit check: max 3 per day (bypass if secret is correct)
 	if req.Secret != "loveriver" {
-		count, err := s.GetTodayQuestionCount(ctx, req.DeviceHash)
+		count, err := s.GetTodayQuestionCount(ctx, req.DeviceHash, req.UserID)
 		if err != nil {
 			return AskResponse{}, err
 		}
@@ -65,9 +66,19 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 
 		// Search similar
 		var similar []db.DailyQuestion
-		if err := s.postgres.
-			Preload("Divination").
-			Where("embedding IS NOT NULL").
+		query := s.postgres.Preload("Divination").Where("embedding IS NOT NULL")
+
+		// Improve search to respect privacy? For now, search across all is fine as anonymity is key for guests.
+		// But maybe for users we should restrict?
+		// "The AI remembers past questions provided by the user" -> Implies shared knowledge base or personal?
+		// Typically shared knowledge base in this context is fine, but privacy?
+		// Given it's "vector memory", usually it implies specific context.
+		// For now let's keep it global or maybe just scoped to user if user exists?
+		// Let's keep global for now as "collective wisdom" unless asked otherwise.
+		// Actually, standard RAG often uses private docs. But here it seems like "history".
+		// Let's keep it simplest: Global search.
+
+		if err := query.
 			Order(gorm.Expr("embedding <-> ?", pgvector.NewVector(vec))).
 			Limit(2).
 			Find(&similar).Error; err == nil {
@@ -93,6 +104,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 
 	question := db.DailyQuestion{
 		DeviceHash:   req.DeviceHash,
+		UserID:       req.UserID,
 		QuestionText: req.Question,
 		QuestionDate: today,
 		CreatedAt:    time.Now(),
@@ -146,11 +158,18 @@ func (s *QuestionService) GetDivination(ctx context.Context, id uint) (db.Divina
 	return div, nil
 }
 
-func (s *QuestionService) History(ctx context.Context, deviceHash string, limit int) ([]db.Divination, error) {
+func (s *QuestionService) History(ctx context.Context, deviceHash string, userID *uint, limit int) ([]db.Divination, error) {
 	var divs []db.Divination
-	if err := s.postgres.
-		Joins("JOIN daily_questions ON daily_questions.id = divinations.daily_question_id").
-		Where("daily_questions.device_hash = ?", deviceHash).
+	query := s.postgres.
+		Joins("JOIN daily_questions ON daily_questions.id = divinations.daily_question_id")
+
+	if userID != nil {
+		query = query.Where("daily_questions.user_id = ?", *userID)
+	} else {
+		query = query.Where("daily_questions.device_hash = ?", deviceHash)
+	}
+
+	if err := query.
 		Order("divinations.created_at desc").
 		Limit(limit).
 		Find(&divs).Error; err != nil {
@@ -181,12 +200,18 @@ func (s *QuestionService) GetDailyPoem(ctx context.Context) (string, error) {
 	return poem, nil
 }
 
-func (s *QuestionService) GetTodayQuestionCount(ctx context.Context, deviceHash string) (int64, error) {
+func (s *QuestionService) GetTodayQuestionCount(ctx context.Context, deviceHash string, userID *uint) (int64, error) {
 	today := time.Now().Truncate(24 * time.Hour)
 	var count int64
-	if err := s.postgres.Model(&db.DailyQuestion{}).
-		Where("device_hash = ? AND question_date = ?", deviceHash, today).
-		Count(&count).Error; err != nil {
+	query := s.postgres.Model(&db.DailyQuestion{}).Where("question_date = ?", today)
+
+	if userID != nil {
+		query = query.Where("user_id = ?", *userID)
+	} else {
+		query = query.Where("device_hash = ?", deviceHash)
+	}
+
+	if err := query.Count(&count).Error; err != nil {
 		return 0, err
 	}
 	return count, nil

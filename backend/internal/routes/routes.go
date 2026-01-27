@@ -3,13 +3,14 @@ package routes
 import (
 	"net/http"
 
+	"fromheart/internal/config"
 	"fromheart/internal/handlers"
 	"fromheart/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(handler *handlers.QuestionHandler) *gin.Engine {
+func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHandler, cfg config.Config) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.RateLimit())
 	r.Use(func(c *gin.Context) {
@@ -25,7 +26,15 @@ func NewRouter(handler *handlers.QuestionHandler) *gin.Engine {
 	})
 
 	api := r.Group("/api")
+	// Apply Optional Auth to all API routes, so handlers can use userID if present
+	api.Use(middleware.OptionalAuthMiddleware(cfg))
 	{
+		api.POST("/register", authHandler.Register)
+		api.POST("/login", authHandler.Login)
+
+		// Me requires auth
+		api.GET("/me", middleware.RequireAuthMiddleware(), authHandler.Me)
+
 		api.POST("/question", handler.Ask)
 		api.GET("/divination/:id", handler.GetDivination)
 		api.GET("/history", handler.History)

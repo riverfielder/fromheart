@@ -26,7 +26,9 @@ func main() {
 	questionService := services.NewQuestionService(postgres, redisClient, llmClient)
 
 	questionHandler := handlers.NewQuestionHandler(questionService)
-	router := routes.NewRouter(questionHandler)
+	authHandler := handlers.NewAuthHandler(postgres, cfg)
+
+	router := routes.NewRouter(questionHandler, authHandler, cfg)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {

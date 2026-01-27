@@ -9,6 +9,7 @@ type Config struct {
 	WenxinKey     string
 	WenxinModel   string
 	WenxinBaseURL string
+	JWTSecret     string
 }
 
 func Load() Config {
@@ -19,5 +20,6 @@ func Load() Config {
 		WenxinKey:     os.Getenv("WENXIN_API_KEY"),
 		WenxinModel:   os.Getenv("WENXIN_MODEL"),
 		WenxinBaseURL: os.Getenv("WENXIN_BASE_URL"),
+		JWTSecret:     os.Getenv("JWT_SECRET"),
 	}
 }

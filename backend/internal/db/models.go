@@ -6,9 +6,17 @@ import (
 	"github.com/pgvector/pgvector-go"
 )
 
+type User struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	Username     string    `gorm:"uniqueIndex" json:"username"`
+	PasswordHash string    `json:"-"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 type DailyQuestion struct {
 	ID           uint   `gorm:"primaryKey"`
 	DeviceHash   string `gorm:"index"`
+	UserID       *uint  `gorm:"index"` // Optional UserID
 	QuestionText string
 	QuestionDate time.Time `gorm:"index"`
 	CreatedAt    time.Time

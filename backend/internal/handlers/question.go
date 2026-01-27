@@ -33,10 +33,17 @@ func (h *QuestionHandler) Ask(c *gin.Context) {
 		req.DeviceHash = "anonymous"
 	}
 
+	userIDVal, _ := c.Get("userID")
+	var userID *uint
+	if id, ok := userIDVal.(uint); ok {
+		userID = &id
+	}
+
 	resp, err := h.service.Ask(c.Request.Context(), services.AskRequest{
 		Question:   req.Question,
 		DeviceHash: req.DeviceHash,
 		Secret:     req.Secret,
+		UserID:     userID,
 	})
 	if err != nil {
 		if err == services.ErrDailyLimitReached {
@@ -48,7 +55,7 @@ func (h *QuestionHandler) Ask(c *gin.Context) {
 	}
 
 	// Fetch updated count to return to frontend
-	count, _ := h.service.GetTodayQuestionCount(c.Request.Context(), req.DeviceHash)
+	count, _ := h.service.GetTodayQuestionCount(c.Request.Context(), req.DeviceHash, userID)
 
 	c.JSON(http.StatusOK, gin.H{
 		"divination_id": resp.DivinationID,
@@ -72,25 +79,40 @@ func (h *QuestionHandler) GetDivination(c *gin.Context) {
 }
 
 func (h *QuestionHandler) History(c *gin.Context) {
-	device := c.Query("device_hash")
-	if device == "" {
-		device = "anonymous"
+	deviceHash := c.Query("device_hash")
+
+	userIDVal, _ := c.Get("userID")
+	var userID *uint
+	if id, ok := userIDVal.(uint); ok {
+		userID = &id
 	}
-	divs, err := h.service.History(c.Request.Context(), device, 20)
+
+	if deviceHash == "" && userID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "device_hash required"})
+		return
+	}
+
+	history, err := h.service.History(c.Request.Context(), deviceHash, userID, 50)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"items": divs})
+	c.JSON(http.StatusOK, gin.H{"items": history})
 }
 
 func (h *QuestionHandler) GetUsage(c *gin.Context) {
 	device := c.Query("device_hash")
-	if device == "" {
+	userIDVal, _ := c.Get("userID")
+	var userID *uint
+	if id, ok := userIDVal.(uint); ok {
+		userID = &id
+	}
+
+	if device == "" && userID == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "device_hash required"})
 		return
 	}
-	count, err := h.service.GetTodayQuestionCount(c.Request.Context(), device)
+	count, err := h.service.GetTodayQuestionCount(c.Request.Context(), device, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
