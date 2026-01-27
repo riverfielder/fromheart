@@ -58,64 +58,63 @@ export default function ShareModal({ show, onClose, result, poem }: ShareModalPr
             {/* The Card to Capture */}
             <div 
               ref={cardRef} 
-              className="w-full bg-[#FAFAFA] rounded-none p-8 flex flex-col items-center space-y-6 shadow-2xl relative overflow-hidden"
+              className="w-[300px] bg-[#FAFAFA] rounded-none px-5 py-6 flex flex-col items-center space-y-4 shadow-2xl relative overflow-hidden"
               style={{ fontFamily: "'Noto Serif SC', serif" }}
             >
               {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-900/5 rounded-bl-full pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-16 h-16 bg-emerald-900/5 rounded-tr-full pointer-events-none" />
-              <div className="absolute inset-0 bg-[url('/bagua.svg')] bg-no-repeat bg-center opacity-[0.03] bg-[length:80%] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-900/5 rounded-bl-full pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-14 h-14 bg-emerald-900/5 rounded-tr-full pointer-events-none" />
+              <div className="absolute inset-0 bg-[url('/bagua.svg')] bg-no-repeat bg-center opacity-[0.03] bg-[length:90%] pointer-events-none" />
 
               {/* Header */}
-              <div className="flex flex-col items-center gap-3 relative z-10 w-full pb-6 border-b border-stone-200">
-                 <Image src="/logo.svg" alt="logo" width={48} height={48} className="opacity-80 grayscale" />
+              <div className="flex flex-col items-center gap-2 relative z-10 w-full pb-4 border-b border-stone-200">
+                 <Image src="/logo.svg" alt="logo" width={36} height={36} className="opacity-80 grayscale" />
                  <div className="text-center">
-                    <h2 className="text-lg font-bold text-gray-800 tracking-[0.2em] uppercase">一问</h2>
-                    <p className="text-[10px] text-gray-400 font-serif tracking-widest uppercase mt-1">From Heart</p>
+                    <h2 className="text-base font-bold text-gray-800 tracking-[0.2em] uppercase">一问</h2>
+                    <p className="text-[9px] text-gray-400 font-serif tracking-widest uppercase mt-0.5">From Heart</p>
                  </div>
               </div>
 
               {/* Content */}
-              <div className="text-center space-y-6 relative z-10 py-2">
+              <div className="text-center space-y-4 relative z-10 py-1 w-full">
                  {/* Direct Answer */}
-                 <div className="space-y-2">
-                    <span className="text-[10px] text-emerald-800/60 font-medium tracking-wide border border-emerald-800/20 px-2 py-0.5 rounded-full">指引</span>
-                    <h3 className="text-2xl font-serif text-gray-900 leading-relaxed font-medium">
+                 <div className="space-y-1.5">
+                    <span className="text-[9px] text-emerald-800/60 font-medium tracking-wide border border-emerald-800/20 px-1.5 py-px rounded-full">指引</span>
+                    <h3 className="text-lg font-serif text-gray-900 leading-relaxed font-medium px-2">
                       {result.direct_answer}
                     </h3>
                  </div>
 
                  {/* Hexagram Visuals */}
-                 <div className="flex items-center justify-center space-x-8 py-2">
-                    <div className="flex flex-col items-center gap-2">
+                 <div className="flex items-center justify-center space-x-6 py-1">
+                    <div className="flex flex-col items-center gap-1">
                         <Hexagram name={result.ben_gua} size="sm" />
-                        <span className="text-[10px] text-stone-500 font-serif tracking-widest">{result.ben_gua}</span>
+                        <span className="text-[9px] text-stone-500 font-serif tracking-widest">{result.ben_gua}</span>
                     </div>
-                    <span className="text-stone-300 font-light text-sm">→</span>
-                    <div className="flex flex-col items-center gap-2">
+                    <span className="text-stone-300 font-light text-xs">→</span>
+                    <div className="flex flex-col items-center gap-1">
                         <Hexagram name={result.bian_gua} size="sm" />
-                        <span className="text-[10px] text-stone-500 font-serif tracking-widest">{result.bian_gua}</span>
+                        <span className="text-[9px] text-stone-500 font-serif tracking-widest">{result.bian_gua}</span>
                     </div>
                  </div>
                  
                  {/* Poem */}
                  {poem && (
-                   <div className="relative py-4">
-                      <span className="absolute top-0 left-1/2 -translate-x-1/2 text-2xl text-stone-200 font-serif">❝</span>
-                      <p className="text-sm font-serif text-gray-600 italic whitespace-pre-line leading-loose px-4">
+                   <div className="relative py-2">
+                      <span className="absolute top-0 left-1/2 -translate-x-1/2 text-xl text-stone-200 font-serif">❝</span>
+                      <p className="text-xs font-serif text-gray-600 italic whitespace-pre-line leading-7 px-2">
                         {poem}
                       </p>
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 text-2xl text-stone-200 font-serif rotate-180">❝</span>
                    </div>
                  )}
               </div>
 
               {/* Footer */}
-              <div className="w-full pt-6 border-t border-stone-200 flex justify-between items-end relative z-10">
-                 <div className="text-left space-y-1">
-                    <p className="text-[10px] text-gray-400">扫码问心</p>
+              <div className="w-full pt-4 border-t border-stone-200 flex justify-between items-end relative z-10">
+                 <div className="text-left space-y-0.5">
+                    <p className="text-[9px] text-gray-400">扫码问心</p>
                      {/* Placeholder for QR Code */}
-                    <div className="w-16 h-16 bg-white p-1 border border-stone-100">
+                    <div className="w-12 h-12 bg-white p-1 border border-stone-100">
                        {/* Using a simple open API to generate QR code for the current site */}
                        <img 
                           src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${typeof window !== 'undefined' ? window.location.origin : 'https://github.com/riverfielder/fromheart'}&color=064e3b`} 
