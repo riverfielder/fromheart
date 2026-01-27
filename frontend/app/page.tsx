@@ -10,6 +10,7 @@ import { Output } from "../types";
 import ResultDisplay from "../components/ResultDisplay";
 import LoadingAnimation from "../components/LoadingAnimation";
 import DonationModal from "../components/DonationModal";
+import ShareModal from "../components/ShareModal";
 
 export default function HomePage() {
   const [question, setQuestion] = useState("");
@@ -21,6 +22,7 @@ export default function HomePage() {
   const [poem, setPoem] = useState<string | null>(null);
   const [usageCount, setUsageCount] = useState(0);
   const [showDonation, setShowDonation] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [blessing, setBlessing] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [wiggleIncense, setWiggleIncense] = useState(false);
@@ -181,6 +183,14 @@ export default function HomePage() {
         blessing={blessing} 
       />
 
+      {/* Share Modal */}
+      <ShareModal 
+        show={showShare} 
+        onClose={() => setShowShare(false)} 
+        result={result} 
+        poem={poem}
+      />
+
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -242,6 +252,18 @@ export default function HomePage() {
           className="bg-emerald-50/50 backdrop-blur-md rounded-3xl p-6 space-y-4 border border-emerald-100/50"
         >
           <ResultDisplay result={result} divinationId={divinationId} />
+          
+          {result && (
+            <div className="flex justify-center pt-2 pb-1">
+               <button 
+                 onClick={() => setShowShare(true)}
+                 className="text-xs text-emerald-600/60 hover:text-emerald-700 font-serif tracking-wider border-b border-dashed border-emerald-600/30 hover:border-emerald-600 transition-all flex items-center gap-1"
+               >
+                 <span>📷</span> 生成分享卡片
+               </button>
+            </div>
+          )}
+
           <p className="text-[10px] text-center text-gray-400 pt-2 opacity-60">仅供参考，不构成现实决策依据。</p>
         </motion.section>
       </AnimatePresence>
