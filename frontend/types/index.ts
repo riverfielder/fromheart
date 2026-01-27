@@ -1,10 +1,14 @@
 export type Output = {
   direct_answer: string;
   summary: string;
+  colloquial_explanation?: string;
   advice: string[];
   warnings: string[];
   keywords: string[];
   raw: string;
+  ben_gua: string;
+  bian_gua: string;
+  changing_lines: string;
 };
 
 export type Divination = {
@@ -13,9 +17,11 @@ export type Divination = {
   BianGua: string;
   ChangingLines: string;
   FinalOutput: string;
+  RawOutput: string; // Add RawOutput
   daily_question?: {
     QuestionText: string;
   };
+  CreatedAt: string;
 };
 
 export type AskResponse = {

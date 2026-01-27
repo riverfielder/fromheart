@@ -7,18 +7,23 @@ import (
 
 // Output defines the structure returned to frontend
 type Output struct {
-	DirectAnswer string   `json:"direct_answer"`
-	Summary      string   `json:"summary"` // This is what frontend expects as a string, but LLM might return an object
-	Advice       []string `json:"advice"`
-	Warnings     []string `json:"warnings"`
-	Keywords     []string `json:"keywords"`
-	Raw          string   `json:"raw"`
+	DirectAnswer  string   `json:"direct_answer"`
+	Summary       string   `json:"summary"` // This is what frontend expects as a string, but LLM might return an object
+	Colloquial    string   `json:"colloquial_explanation"`
+	Advice        []string `json:"advice"`
+	Warnings      []string `json:"warnings"`
+	Keywords      []string `json:"keywords"`
+	Raw           string   `json:"raw"`
+	BenGua        string   `json:"ben_gua"`
+	BianGua       string   `json:"bian_gua"`
+	ChangingLines string   `json:"changing_lines"`
 }
 
 // LLMResponse is an intermediate struct to handle potentially complex JSON from LLM
 type LLMResponse struct {
 	DirectAnswer string      `json:"direct_answer"`
 	Summary      interface{} `json:"summary"` // Can be string or object
+	Colloquial   string      `json:"colloquial_explanation"`
 	Advice       []string    `json:"advice"`
 	Warnings     []string    `json:"warnings"`
 	Keywords     []string    `json:"keywords"`
@@ -39,11 +44,15 @@ func Normalize(raw, ben, bian, lines string) Output {
 	err := json.Unmarshal([]byte(cleanRaw), &llmResp)
 	if err == nil {
 		finalOutput := Output{
-			DirectAnswer: llmResp.DirectAnswer,
-			Advice:       llmResp.Advice,
-			Warnings:     llmResp.Warnings,
-			Keywords:     llmResp.Keywords,
-			Raw:          raw,
+			DirectAnswer:  llmResp.DirectAnswer,
+			Colloquial:    llmResp.Colloquial,
+			Advice:        llmResp.Advice,
+			Warnings:      llmResp.Warnings,
+			Keywords:      llmResp.Keywords,
+			Raw:           raw,
+			BenGua:        ben,
+			BianGua:       bian,
+			ChangingLines: lines,
 		}
 
 		// Handle Summary: if it's an object, marshal it back to string; if it's string, use directly

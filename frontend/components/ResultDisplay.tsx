@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { Output } from "../types";
+import Hexagram from "./Hexagram";
 
 interface ResultDisplayProps {
   result: Output | null;
@@ -37,6 +38,28 @@ export default function ResultDisplay({ result, divinationId }: ResultDisplayPro
           {result.direct_answer}
         </p>
       </div>
+
+       {/* Hexagram Display */}
+       <div className="flex items-center justify-center space-x-8 py-4 bg-stone-50/50 rounded-xl mb-6">
+        <div className="flex flex-col items-center gap-2">
+           <Hexagram name={result.ben_gua} size="md" />
+           <span className="font-serif text-lg">{result.ben_gua}</span>
+           <span className="text-xs text-stone-400">本卦</span>
+        </div>
+        <div className="text-stone-300">→</div>
+        <div className="flex flex-col items-center gap-2">
+           <Hexagram name={result.bian_gua} size="md" />
+           <span className="font-serif text-lg">{result.bian_gua}</span>
+           <span className="text-xs text-stone-400">变卦</span>
+        </div>
+      </div>
+
+      {result.colloquial_explanation && (
+         <div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-100">
+            <h3 className="text-xs font-bold text-stone-400 uppercase mb-2">白话解签</h3>
+            <p className="text-stone-700 leading-7">{result.colloquial_explanation}</p>
+         </div>
+      )}
 
       <div className="space-y-4">
         <p className="text-sm text-gray-700 leading-7 text-justify">
