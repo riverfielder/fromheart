@@ -120,3 +120,32 @@ export async function getAdminQuestions(secret: string) {
   }
   return res.json();
 }
+
+export async function getAllQuestions(adminSecret: string) {
+    const res = await fetch(`${API_BASE}/api/admin/questions`,{
+      headers: {
+        ...getHeaders(),
+        "X-Admin-Secret": adminSecret
+      }
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch questions");
+    return res.json();
+}
+
+export interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+export async function chat(id: number, message: string, history: ChatMessage[]) {
+  const res = await fetch(`${API_BASE}/api/divination/${id}/chat`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ message, history }),
+  });
+  if (!res.ok) {
+    throw new Error("Chat request failed");
+  }
+  return res.json();
+}

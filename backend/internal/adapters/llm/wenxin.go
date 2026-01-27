@@ -291,6 +291,57 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	return parsed.Data[0].Embedding, nil
 }
 
+func (w *WenxinClient) Chat(ctx context.Context, history []map[string]string) (string, error) {
+	if w.apiKey == "" {
+		return "", errors.New("missing WENXIN_API_KEY")
+	}
+
+	payload := map[string]interface{}{
+		"model": w.model,
+		"messages": history,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+
+	endpoint := w.baseURL + "/v2/chat/completions"
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+w.apiKey)
+
+	resp, err := w.httpClient.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		var errBody map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errBody)
+		return "", fmt.Errorf("wenxin api error: status %d, body: %v", resp.StatusCode, errBody)
+	}
+
+	var parsed struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return "", err
+	}
+	if len(parsed.Choices) == 0 {
+		return "", errors.New("empty choices")
+	}
+	return parsed.Choices[0].Message.Content, nil
+}
+
 func formatContext(ctx string) string {
 	if ctx == "" {
 		return ""

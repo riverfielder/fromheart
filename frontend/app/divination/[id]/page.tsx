@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { getDivination } from "../../../lib/api";
+import { getDivination, chat, ChatMessage } from "../../../lib/api";
 import { Divination, Output } from "../../../types";
 import Hexagram from "../../../components/Hexagram";
 
@@ -12,6 +12,32 @@ export default function DivinationDetailPage() {
   const [data, setData] = useState<Divination | null>(null);
   const [parsedRaw, setParsedRaw] = useState<Output | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Chat state
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const handleSend = async () => {
+    if (!input.trim() || chatLoading) return;
+    
+    // Add user message immediately
+    const userMsg = { role: "user", content: input };
+    const newHistory = [...messages, userMsg];
+    setMessages(newHistory);
+    setInput("");
+    setChatLoading(true);
+
+    try {
+      const res = await chat(Number(params?.id), userMsg.content, messages);
+      setMessages([...newHistory, { role: "assistant", content: res.response }]);
+    } catch (e) {
+      console.error(e);
+      // Optional: show error to user
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   useEffect(() => {
     const id = Number(params?.id);
@@ -97,6 +123,58 @@ export default function DivinationDetailPage() {
                <p className="text-stone-600 leading-7 whitespace-pre-wrap">{data.FinalOutput}</p>
             </div>
           </section>
+
+          {/* 追问聊天区域 */}
+          <section className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-sm border border-stone-100">
+            <h2 className="text-xs font-medium text-stone-400 mb-4 uppercase tracking-wide">
+              向大师追问
+            </h2>
+            
+            <div className="space-y-4 mb-6">
+                {messages.length === 0 && (
+                   <div className="text-center text-stone-400 py-4 text-sm font-serif italic">
+                      “若有未尽之意，尽可问来...”
+                   </div>
+                )}
+                {messages.map((m, i) => (
+                    <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                            m.role === 'user' 
+                            ? 'bg-stone-800 text-stone-50 rounded-br-none' 
+                            : 'bg-stone-100 text-stone-700 rounded-bl-none'
+                        }`}>
+                            {m.content}
+                        </div>
+                    </div>
+                ))}
+                {chatLoading && (
+                    <div className="flex justify-start animate-pulse">
+                       <div className="bg-stone-50 rounded-2xl px-4 py-3 text-sm text-stone-400">
+                         大师正在沉思...
+                       </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="flex gap-2">
+                <input 
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSend()}
+                    placeholder="对卦象有疑问？继续追问..."
+                    className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 transition-all font-serif"
+                    disabled={chatLoading}
+                />
+                <button 
+                    onClick={handleSend}
+                    disabled={chatLoading || !input.trim()}
+                    className="bg-stone-800 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-stone-700 disabled:opacity-50 disabled:hover:bg-stone-800 transition-colors"
+                >
+                    发送
+                </button>
+            </div>
+          </section>
+
         </div>
       )}
     </main>

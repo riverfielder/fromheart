@@ -156,3 +156,33 @@ func (h *QuestionHandler) AdminAllHistory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"items": questions})
 }
+
+type chatRequest struct {
+	Message string                 `json:"message" binding:"required"`
+	History []services.ChatMessage `json:"history"`
+}
+
+func (h *QuestionHandler) Chat(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req chatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := h.service.Chat(c.Request.Context(), uint(id), req.Message, req.History)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"response": response,
+	})
+}

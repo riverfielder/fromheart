@@ -280,3 +280,60 @@ func (s *QuestionService) GetAllQuestions(ctx context.Context, secret string) ([
 
 	return results, nil
 }
+
+type ChatRequest struct {
+	DivinationID uint
+	Message      string
+	History      []map[string]string // Previous chat history from frontend if stateless, or we build it
+}
+
+// Minimal chat history struct for LLM
+type ChatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+func (s *QuestionService) Chat(ctx context.Context, divinationID uint, message string, history []ChatMessage) (string, error) {
+	// 1. Get original divination context
+	div, err := s.GetDivination(ctx, divinationID)
+	if err != nil {
+		return "", err
+	}
+	
+	// 2. Build system prompt / context
+	var messages []map[string]string
+	
+	// 2.1 System Role
+	messages = append(messages, map[string]string{
+		"role": "system",
+		"content": fmt.Sprintf(`你是一位精通梅花易数的玄学大师。
+当前正在针对一个特定的卦象为信众解惑。
+
+【原卦象信息】
+问题：%s
+本卦：%s
+变卦：%s
+动爻：%s
+卦辞总结：%s
+
+请针对用户的后续提问进行解答。回答要继续保持大师风范，语气平和、玄妙但又充满关怀。不要重复之前的卦辞，而是针对新问题进行延伸解读。`, 
+		div.DailyQuestion.QuestionText, div.BenGua, div.BianGua, div.ChangingLines, div.FinalOutput),
+	})
+	
+	// 2.2 Append conversation history
+	for _, msg := range history {
+		messages = append(messages, map[string]string{
+			"role": msg.Role,
+			"content": msg.Content,
+		})
+	}
+	
+	// 2.3 Append current user message
+	messages = append(messages, map[string]string{
+		"role": "user",
+		"content": message,
+	})
+	
+	// 3. Call LLM
+	return s.llm.Chat(ctx, messages)
+}
