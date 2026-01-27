@@ -239,11 +239,12 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 		return nil, errors.New("missing WENXIN_API_KEY")
 	}
 
-	// Use "Embedding-V1" which is the standard Qianfan embedding model name (384 dim)
-	// If using bge-large-zh, dimension would be 1024, requiring DB schema change.
+	// Use "embedding-v1" (lowercase) which is often the ID for the OpenAI-compatible endpoint
+	// This model has 384 dimensions.
+	// Documentation reference: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Dmba8k71y
 	payload := map[string]interface{}{
-		"model": "Embedding-V1",
-		"input": text,
+		"model": "embedding-v1",
+		"input": []string{text},
 	}
 
 	body, err := json.Marshal(payload)
@@ -251,8 +252,8 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 		return nil, err
 	}
 
-	// Assuming OpenAI-compatible proxy structure
-	endpoint := w.baseURL + "/v1/embeddings"
+	// Strictly follow the documentation provided by the user: /v2/embeddings
+	endpoint := w.baseURL + "/v2/embeddings"
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -269,7 +270,7 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		var errBody map[string]interface{}
 		json.NewDecoder(resp.Body).Decode(&errBody)
-		return nil, fmt.Errorf("embedding api error: status %d, body: %v", resp.StatusCode, errBody)
+		return nil, fmt.Errorf("embedding api error: url=%s, status=%d, body=%v", endpoint, resp.StatusCode, errBody)
 	}
 
 	var parsed struct {
