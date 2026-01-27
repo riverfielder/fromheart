@@ -4,17 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { getDivination } from "../../../lib/api";
-
-type Divination = {
-  ID: number;
-  BenGua: string;
-  BianGua: string;
-  ChangingLines: string;
-  FinalOutput: string;
-  daily_question?: {
-    QuestionText: string;
-  };
-};
+import { Divination } from "../../../types";
 
 export default function DivinationDetailPage() {
   const params = useParams();

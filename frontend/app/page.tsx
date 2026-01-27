@@ -6,15 +6,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { askQuestion, getDailyPoem, getUsage, getBlessing } from "../lib/api";
-
-type Output = {
-  direct_answer: string;
-  summary: string;
-  advice: string[];
-  warnings: string[];
-  keywords: string[];
-  raw: string;
-};
+import { Output } from "../types";
+import ResultDisplay from "../components/ResultDisplay";
+import LoadingAnimation from "../components/LoadingAnimation";
+import DonationModal from "../components/DonationModal";
 
 export default function HomePage() {
   const [question, setQuestion] = useState("");
@@ -27,29 +22,12 @@ export default function HomePage() {
   const [usageCount, setUsageCount] = useState(0);
   const [showDonation, setShowDonation] = useState(false);
   const [blessing, setBlessing] = useState<string | null>(null);
-  const [showQR, setShowQR] = useState<"none" | "wechat" | "alipay">("none");
   const [showToast, setShowToast] = useState(false);
   const [wiggleIncense, setWiggleIncense] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
   const [devSecret, setDevSecret] = useState("");
   const [devModeActive, setDevModeActive] = useState(false);
   const [devToast, setDevToast] = useState<string | null>(null);
-  const [loadingText, setLoadingText] = useState("推演中");
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (loading) {
-      const texts = ["沐浴焚香", "诚心起卦", "推演天机", "撰写卦辞", "云开雾散"];
-      let i = 0;
-      setLoadingText(texts[0]);
-      interval = setInterval(() => {
-        i = (i + 1) % texts.length;
-        if (i === texts.length - 1) clearInterval(interval); // Stop at last step
-        setLoadingText(texts[i]);
-      }, 3000); // Change every 3 seconds
-    }
-    return () => clearInterval(interval);
-  }, [loading]);
 
   useEffect(() => {
     getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
@@ -139,7 +117,7 @@ export default function HomePage() {
 
       <div className="max-w-lg mx-auto space-y-8 relative">
       
-      {/* Energy Toast */}
+      
       <AnimatePresence>
         {showToast && (
           <motion.div
@@ -148,10 +126,7 @@ export default function HomePage() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
           >
-            <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-emerald-100 flex items-center gap-3 ring-1 ring-emerald-50">
-               <span className="text-xl animate-bounce">🌩️</span>
-               <span className="text-sm font-serif text-emerald-900 tracking-widest font-medium">气运能量降低</span>
-            </div>
+             {/* Toast Content Removed */}
           </motion.div>
         )}
       </AnimatePresence>
@@ -179,83 +154,31 @@ export default function HomePage() {
         onClick={handleOpenDonation}
         initial={{ opacity: 0 }}
         animate={{ 
-          opacity: 0.6 + (usageCount * 0.1),
+          opacity: 1, // Always visible logic handled by filters for grayscale
           scale: wiggleIncense ? [1, 1.4, 0.9, 1.1, 1] : 1,
           rotate: wiggleIncense ? [0, -15, 15, -10, 10, 0] : 0,
+          filter: `grayscale(${Math.max(0, 1 - usageCount * 0.33) * 100}%) opacity(${0.5 + Math.min(usageCount, 3) * 0.16})`,
         }}
         transition={{ 
            opacity: { duration: 0.5 },
+           filter: { duration: 0.5 },
            scale: { duration: 0.6, type: "spring" },
            rotate: { duration: 0.5 }
         }}
         whileHover={{ scale: 1.1 }}
       >
         <div className="flex flex-col items-center relative">
-            <div className={`absolute inset-0 bg-emerald-400 rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${wiggleIncense ? "opacity-40" : ""}`} />
             <span className="text-2xl filter drop-shadow-md relative z-10">🕯️</span>
             <span className="text-[10px] text-stone-500 font-serif relative z-10 mt-1">香火</span>
         </div>
       </motion.div>
 
       {/* Donation Modal */}
-      <AnimatePresence>
-        {showDonation && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowDonation(false)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-6 text-center shadow-2xl relative"
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-xl font-serif text-emerald-800">福源广进</h3>
-              
-              {blessing ? (
-                 <p className="text-stone-600 font-serif text-lg leading-loose italic">{blessing}</p>
-              ) : (
-                 <p className="text-gray-400 text-sm animate-pulse">祈福中...</p>
-              )}
-
-              <div className="pt-4 space-y-4">
-                 <button 
-                   onClick={() => setShowQR(showQR === "wechat" ? "none" : "wechat")}
-                   className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-emerald-200 transition-all font-medium text-sm flex items-center justify-center gap-2"
-                 >
-                   <span>🙏</span> 施舍香火以获福源
-                 </button>
-                 
-                 <AnimatePresence mode="wait">
-                   {showQR !== "none" && (
-                     <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                     >
-                       <div className="flex justify-center gap-4 mb-4 text-xs font-medium text-gray-500">
-                          <button onClick={() => setShowQR("wechat")} className={`${showQR==="wechat"?"text-emerald-600 border-b-2 border-emerald-600":""} pb-1`}>微信支付</button>
-                          <button onClick={() => setShowQR("alipay")} className={`${showQR==="alipay"?"text-blue-600 border-b-2 border-blue-600":""} pb-1`}>支付宝</button>
-                       </div>
-                       
-                       <div className="relative w-48 h-48 mx-auto bg-gray-50 rounded-lg p-2 border border-gray-100">
-                          {showQR === "wechat" && <Image src="/weixin.png" alt="WeChat Pay" fill className="object-contain" />}
-                          {showQR === "alipay" && <Image src="/zfb.jpg" alt="Alipay" fill className="object-contain" />}
-                       </div>
-                       <p className="text-[10px] text-gray-400 mt-2">心诚则灵，随缘施舍</p>
-                     </motion.div>
-                   )}
-                 </AnimatePresence>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <DonationModal 
+        show={showDonation} 
+        onClose={() => setShowDonation(false)} 
+        blessing={blessing} 
+      />
 
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
@@ -303,16 +226,7 @@ export default function HomePage() {
           disabled={loading}
         >
           {loading ? (
-             <span className="flex items-center gap-2">
-               <motion.span
-                 animate={{ rotate: 360 }}
-                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                 className="inline-block w-4 h-4"
-               >
-                 <Image src="/bagua.svg" alt="loading" width={16} height={16} className="opacity-80" />
-               </motion.span>
-               <span>{loadingText}...</span>
-             </span>
+             <LoadingAnimation loading={loading} />
           ) : "今日问"}
         </motion.button>
         </div>
@@ -326,70 +240,7 @@ export default function HomePage() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="bg-emerald-50/50 backdrop-blur-md rounded-3xl p-6 space-y-4 border border-emerald-100/50"
         >
-          {!result ? (
-             <div className="flex flex-col items-center justify-center py-8 text-emerald-800/40 space-y-4">
-                <motion.div 
-                  className="relative w-16 h-16 opacity-40"
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                >
-                  <Image src="/bagua.svg" alt="Bagua" fill className="object-contain" />
-                </motion.div>
-                <p className="text-sm font-serif tracking-widest text-emerald-800/60">卦象待显</p>
-             </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, filter: "blur(10px)" }}
-              animate={{ opacity: 1, filter: "blur(0px)" }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="border-b border-emerald-100/60 pb-4 mb-4">
-                 <p className="text-xl font-serif text-emerald-900 leading-relaxed tracking-wide">{result.direct_answer}</p>
-              </div>
-              
-              <div className="space-y-4">
-                <p className="text-sm text-gray-700 leading-7 text-justify">{result.summary}</p>
-                
-                <div className="flex flex-wrap gap-2">
-                   {result.keywords.map(k => (
-                     <span key={k} className="px-2.5 py-1 bg-white/60 text-emerald-700 text-xs rounded-full border border-emerald-100/50 shadow-sm">{k}</span>
-                   ))}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="bg-white/40 p-3 rounded-xl border border-white/50">
-                    <h3 className="text-xs font-bold text-emerald-800 mb-2 uppercase tracking-wider">建议</h3>
-                    <ul className="space-y-1">
-                      {result.advice.map((item) => (
-                        <li key={item} className="text-xs text-gray-600 flex items-start gap-1.5">
-                          <span className="text-emerald-400 mt-0.5">▪</span>{item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="bg-white/40 p-3 rounded-xl border border-white/50">
-                    <h3 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">忌讳</h3>
-                    <ul className="space-y-1">
-                      {result.warnings.map((item) => (
-                        <li key={item} className="text-xs text-gray-600 flex items-start gap-1.5">
-                          <span className="text-red-300 mt-0.5">▪</span>{item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {divinationId && (
-                  <div className="pt-2 flex justify-end">
-                    <Link className="text-xs text-emerald-600 hover:text-emerald-800 transition-colors flex items-center gap-1 group" href={`/divination/${divinationId}`}>
-                      查看详情 
-                      <span className="group-hover:translate-x-1 transition-transform">→</span>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
+          <ResultDisplay result={result} divinationId={divinationId} />
           <p className="text-[10px] text-center text-gray-400 pt-2 opacity-60">仅供参考，不构成现实决策依据。</p>
         </motion.section>
       </AnimatePresence>
