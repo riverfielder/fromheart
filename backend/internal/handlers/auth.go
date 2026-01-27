@@ -61,7 +61,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	// Generate token
-	token, _ := auth.GenerateToken(user.ID, h.Config.JWTSecret)
+	token, err := auth.GenerateToken(user.ID, h.Config.JWTSecret)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"token": token, "user": user})
 }
@@ -115,7 +119,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 }
 
 type UpdateProfileRequest struct {
-	BirthDateStr string `json:"birth_date_str"`
+	BirthDateStr string `json:"birth_date"`
 	Gender       string `json:"gender"` // male, female, other
 	MBTI         string `json:"mbti"`
 	Zodiac       string `json:"zodiac"`

@@ -51,7 +51,8 @@ export async function login(username: string, password: string) {
 export async function getMe() {
     const res = await fetch(`${API_BASE}/api/me`, { headers: getHeaders() }); 
     if (!res.ok) throw new Error("Unauthorized");
-    return res.json();
+    const data = await res.json();
+    return data.user;
 }
 
 export async function askQuestion(question: string, deviceHash: string, secret?: string) {

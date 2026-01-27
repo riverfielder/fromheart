@@ -12,7 +12,7 @@ type User struct {
 	PasswordHash string    `json:"-"`
 	
 	// Profile fields
-	BirthDateStr string    `json:"birth_date_str"` // YYYY-MM-DD
+	BirthDateStr string    `json:"birth_date"`     // YYYY-MM-DD HH:mm
 	Gender       string    `json:"gender"`         // male/female/other
 	MBTI         string    `json:"mbti"`
 	Zodiac       string    `json:"zodiac"`

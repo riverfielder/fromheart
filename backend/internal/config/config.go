@@ -13,6 +13,11 @@ type Config struct {
 }
 
 func Load() Config {
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "default_secret_please_change_in_production"
+	}
+
 	return Config{
 		PostgresDSN:   os.Getenv("POSTGRES_DSN"),
 		RedisAddr:     os.Getenv("REDIS_ADDR"),
@@ -20,6 +25,6 @@ func Load() Config {
 		WenxinKey:     os.Getenv("WENXIN_API_KEY"),
 		WenxinModel:   os.Getenv("WENXIN_MODEL"),
 		WenxinBaseURL: os.Getenv("WENXIN_BASE_URL"),
-		JWTSecret:     os.Getenv("JWT_SECRET"),
+		JWTSecret:     jwtSecret,
 	}
 }

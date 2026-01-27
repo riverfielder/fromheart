@@ -220,7 +220,7 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* Profile Icon */}
-      <Link href="/profile" className="absolute top-4 left-4 cursor-pointer z-10 group no-underline">
+      <Link href="/profile" className="absolute top-5 left-5 cursor-pointer z-10 group no-underline block">
         <motion.div 
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
@@ -235,7 +235,7 @@ export default function HomePage() {
 
       {/* Incense Icon */}
       <motion.div 
-        className="absolute top-4 right-4 cursor-pointer z-10 group"
+        className="absolute top-5 right-5 cursor-pointer z-10 group"
         onClick={handleOpenDonation}
         initial={{ opacity: 0 }}
         animate={{ 

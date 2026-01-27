@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (token) {
       setAuthToken(token);
       getMe()
-        .then((res) => setUser(res.user))
+        .then((u) => setUser(u))
         .catch(() => {
           setAuthToken(null);
           setUser(null);
