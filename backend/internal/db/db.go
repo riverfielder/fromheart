@@ -14,6 +14,10 @@ func NewPostgres(cfg config.Config) *gorm.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Enable pgvector extension
+	db.Exec("CREATE EXTENSION IF NOT EXISTS vector")
+
 	if err := db.AutoMigrate(&DailyQuestion{}, &Divination{}); err != nil {
 		log.Fatal(err)
 	}

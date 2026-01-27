@@ -67,7 +67,7 @@ direct_answer 风格必须晦涩高深、玄妙莫测，如古代签文般充满
 			},
 			{
 				"role":    "user",
-				"content": fmt.Sprintf("问题：%s\n本卦：%s\n变卦：%s\n动爻：%s\n请给出JSON格式的解读。", req.Question, req.BenGua, req.BianGua, req.ChangingLines),
+				"content": fmt.Sprintf("问题：%s\n本卦：%s\n变卦：%s\n动爻：%s\n%s\n请给出JSON格式的解读。", req.Question, req.BenGua, req.BianGua, req.ChangingLines, formatContext(req.Context)),
 			},
 		},
 	}
@@ -232,4 +232,64 @@ func (w *WenxinClient) GenerateBlessing(ctx context.Context) (string, error) {
 		return parsed.Result, nil
 	}
 	return "", errors.New("empty response")
+}
+
+func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error) {
+	if w.apiKey == "" {
+		return nil, errors.New("missing WENXIN_API_KEY")
+	}
+
+	payload := map[string]interface{}{
+		"model": "text-embedding-v1", // Using a likely available model name for proxy
+		"input": text,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	// Assuming OpenAI-compatible proxy structure based on GenerateAnswer
+	endpoint := w.baseURL + "/v1/embeddings"
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+w.apiKey)
+
+	resp, err := w.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		var errBody map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errBody)
+		return nil, fmt.Errorf("embedding api error: status %d, body: %v", resp.StatusCode, errBody)
+	}
+
+	var parsed struct {
+		Data []struct {
+			Embedding []float32 `json:"embedding"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return nil, err
+	}
+
+	if len(parsed.Data) == 0 {
+		return nil, errors.New("no embedding returned")
+	}
+
+	return parsed.Data[0].Embedding, nil
+}
+
+func formatContext(ctx string) string {
+	if ctx == "" {
+		return ""
+	}
+	return fmt.Sprintf("参考历史案例：\n%s", ctx)
 }

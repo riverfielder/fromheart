@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"fromheart/internal/adapters/llm"
@@ -10,6 +12,7 @@ import (
 	"fromheart/internal/divination"
 	"fromheart/internal/postprocess"
 
+	"github.com/pgvector/pgvector-go"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -53,11 +56,40 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 
 	result := divination.Generate(req.Question)
 
+	// Vector Memory: Embed & Search
+	var vec []float32
+	var contextStr string
+	if v, err := s.llm.Embed(ctx, req.Question); err == nil {
+		vec = v
+		// Search similar
+		var similar []db.DailyQuestion
+		if err := s.postgres.
+			Preload("Divination").
+			Where("embedding IS NOT NULL").
+			Order("embedding <-> ?", pgvector.NewVector(vec)).
+			Limit(2).
+			Find(&similar).Error; err == nil {
+
+			var contexts []string
+			for _, q := range similar {
+				// Only use if it has a real divination and is not the exact same question string (though unlikely with float comparison, duplicate inputs possible)
+				if q.Divination.ID != 0 && q.QuestionText != req.Question {
+					// Truncate output to avoid context overflow? summary is short.
+					contexts = append(contexts, fmt.Sprintf("- 问：%s => 答：%s", q.QuestionText, q.Divination.FinalOutput))
+				}
+			}
+			if len(contexts) > 0 {
+				contextStr = strings.Join(contexts, "\n")
+			}
+		}
+	}
+
 	question := db.DailyQuestion{
 		DeviceHash:   req.DeviceHash,
 		QuestionText: req.Question,
 		QuestionDate: today,
 		CreatedAt:    time.Now(),
+		Embedding:    pgvector.NewVector(vec), // Store embedding
 	}
 	if err := s.postgres.Create(&question).Error; err != nil {
 		return AskResponse{}, err
@@ -68,6 +100,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		BenGua:        result.BenGua,
 		BianGua:       result.BianGua,
 		ChangingLines: result.ChangingLines,
+		Context:       contextStr, // Inject memory
 	})
 	if err != nil {
 		return AskResponse{}, err

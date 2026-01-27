@@ -1,6 +1,10 @@
 package db
 
-import "time"
+import (
+	"time"
+
+	"github.com/pgvector/pgvector-go"
+)
 
 type DailyQuestion struct {
 	ID           uint   `gorm:"primaryKey"`
@@ -9,6 +13,7 @@ type DailyQuestion struct {
 	QuestionDate time.Time `gorm:"index"`
 	CreatedAt    time.Time
 	Divination   Divination
+	Embedding    pgvector.Vector `gorm:"type:vector(384)"` // Assuming 384 dim model
 }
 
 type Divination struct {
