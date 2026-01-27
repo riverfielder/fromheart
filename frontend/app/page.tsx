@@ -219,44 +219,51 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      {/* Profile Icon */}
-      <Link href="/profile" className="absolute top-5 left-5 cursor-pointer z-10 group no-underline block w-10">
-        <motion.div 
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ duration: 0.5 }}
-           whileHover={{ scale: 1.1 }}
-           className="flex flex-col items-center relative"
-        >
-            <span className="text-2xl filter drop-shadow-md relative z-10 opacity-90 h-8 flex items-center justify-center">👤</span>
-            <span className="text-[10px] text-stone-500 font-serif relative z-10 mt-1">命理</span>
-        </motion.div>
-      </Link>
+      {/* Top Action Bar - Aligned */}
+      <div className="absolute top-0 left-0 w-full p-5 flex justify-between items-start z-10 pointer-events-none">
+          {/* Profile Icon */}
+          <Link href="/profile" className="pointer-events-auto group no-underline block w-10">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ scale: 1.1 }}
+              className="flex flex-col items-center relative"
+            >
+                <div className="h-8 flex items-center justify-center">
+                   <span className="text-2xl filter drop-shadow-md opacity-90 leading-none">👤</span>
+                </div>
+                <span className="text-[10px] text-stone-500 font-serif mt-1">命理</span>
+            </motion.div>
+          </Link>
 
-      {/* Incense Icon */}
-      <motion.div 
-        className="absolute top-5 right-5 cursor-pointer z-10 group w-10"
-        onClick={handleOpenDonation}
-         initial={{ opacity: 0 }}
-         animate={{ 
-           opacity: 1, // Always visible logic handled by filters for grayscale
-           scale: wiggleIncense ? [1, 1.4, 0.9, 1.1, 1] : 1,
-           rotate: wiggleIncense ? [0, -15, 15, -10, 10, 0] : 0,
-           filter: `grayscale(${Math.max(0, 1 - usageCount * 0.33) * 100}%) opacity(${0.5 + Math.min(usageCount, 3) * 0.16})`,
-         }}
-         transition={{ 
-            opacity: { duration: 0.5 },
-            filter: { duration: 0.5 },
-            scale: { duration: 0.6, type: "spring" },
-            rotate: { duration: 0.5 }
-         }}
-         whileHover={{ scale: 1.1 }}
-       >
-         <div className="flex flex-col items-center relative">
-             <span className="text-2xl filter drop-shadow-md relative z-10 h-8 flex items-center justify-center">🕯️</span>
-             <span className="text-[10px] text-stone-500 font-serif relative z-10 mt-1">香火</span>
-         </div>
-       </motion.div>
+          {/* Incense Icon */}
+          <motion.div 
+            className="pointer-events-auto group w-10 cursor-pointer"
+            onClick={handleOpenDonation}
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: 1, 
+              scale: wiggleIncense ? [1, 1.4, 0.9, 1.1, 1] : 1,
+              rotate: wiggleIncense ? [0, -15, 15, -10, 10, 0] : 0,
+              filter: `grayscale(${Math.max(0, 1 - usageCount * 0.33) * 100}%) opacity(${0.5 + Math.min(usageCount, 3) * 0.16})`,
+            }}
+            transition={{ 
+                opacity: { duration: 0.5 },
+                filter: { duration: 0.5 },
+                scale: { duration: 0.6, type: "spring" },
+                rotate: { duration: 0.5 }
+            }}
+            whileHover={{ scale: 1.1 }}
+          >
+            <div className="flex flex-col items-center relative">
+                <div className="h-8 flex items-center justify-center">
+                    <span className="text-2xl filter drop-shadow-md leading-none">🕯️</span>
+                </div>
+                <span className="text-[10px] text-stone-500 font-serif mt-1">香火</span>
+            </div>
+          </motion.div>
+      </div>
 
       {/* Donation Modal */}
       <DonationModal 
