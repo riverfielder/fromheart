@@ -105,6 +105,7 @@ export default function HomePage() {
       setTimeout(() => setDevToast(null), 3000);
     } else {
       setDevToast("机缘未到");
+      setShowDevModal(false);
       setTimeout(() => setDevToast(null), 3000);
     }
   };
@@ -214,49 +215,6 @@ export default function HomePage() {
           onChange={(e) => setQuestion(e.target.value)}
         />
         <div className="flex justify-end items-center relative">
-        <AnimatePresence>
-          {showToast && (
-            <motion.div
-              initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-              animate={{ 
-                opacity: [0, 1, 1, 0],
-                x: 160, 
-                y: -320,
-                scale: [0.5, 1.5, 0.8, 0]
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.5, ease: "easeInOut", times: [0, 0.1, 0.8, 1] }}
-              className="absolute left-[40%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
-            >
-               <div className="relative w-8 h-8 flex items-center justify-center">
-                  {/* Outer Glow */}
-                  <motion.div
-                     animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0.8, 0.5] }}
-                     transition={{ duration: 0.4, repeat: Infinity }}
-                     className="absolute w-8 h-8 bg-orange-400/30 rounded-full blur-md"
-                  />
-                  {/* Flame Core */}
-                  <motion.div 
-                     animate={{ 
-                        scale: [1, 1.1, 0.95, 1],
-                        rotate: [-5, 5, -2, 2, 0],
-                        height: ["24px", "28px", "24px"]
-                     }}
-                     transition={{ duration: 0.6, repeat: Infinity }}
-                     className="w-4 h-6 bg-gradient-to-t from-red-500 via-orange-400 to-yellow-200 rounded-full rounded-t-[50%] shadow-[0_0_10px_rgba(255,165,0,0.6)] blur-[0.5px]"
-                     style={{ borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%" }}
-                  />
-                  {/* Spark */}
-                  <motion.div 
-                     animate={{ y: [-5, -20], x: [0, 5], opacity: [1, 0] }}
-                     transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
-                     className="absolute top-0 w-1 h-1 bg-yellow-100 rounded-full blur-[0.5px]"
-                  />
-               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <motion.button
           whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.2)" }}
           whileTap={{ scale: 0.98 }}
@@ -317,10 +275,10 @@ export default function HomePage() {
       <AnimatePresence>
         {devToast && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
           >
             <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-emerald-100 flex items-center gap-3 ring-1 ring-emerald-50">
                <span className="text-xl">🗝️</span>
