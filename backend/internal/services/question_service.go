@@ -69,7 +69,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 			Order(gorm.Expr("embedding <-> ?", pgvector.NewVector(vec))).
 			Limit(2).
 			Find(&similar).Error; err == nil {
-
+			
 			var contexts []string
 			for _, q := range similar {
 				// Only use if it has a real divination and is not the exact same question string (though unlikely with float comparison, duplicate inputs possible)
@@ -82,6 +82,9 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 				contextStr = strings.Join(contexts, "\n")
 			}
 		}
+	} else {
+		// Log embedding error but proceed
+		fmt.Printf("Embedding error: %v\n", err)
 	}
 
 	question := db.DailyQuestion{
@@ -89,13 +92,17 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		QuestionText: req.Question,
 		QuestionDate: today,
 		CreatedAt:    time.Now(),
-		Embedding:    pgvector.NewVector(vec), // Store embedding
-	}
-	if err := s.postgres.Create(&question).Error; err != nil {
-		return AskResponse{}, err
 	}
 
-	raw, err := s.llm.GenerateAnswer(ctx, llm.GenerateRequest{
+	// Only set embedding if we have valid vector
+	if len(vec) > 0 {
+		v := pgvector.NewVector(vec)
+		question.Embedding = &v
+	}
+
+	if err := s.postgres.Create(&question).Error; err != nil {
+		return AskResponse{}, err
+	}	raw, err := s.llm.GenerateAnswer(ctx, llm.GenerateRequest{
 		Question:      req.Question,
 		BenGua:        result.BenGua,
 		BianGua:       result.BianGua,

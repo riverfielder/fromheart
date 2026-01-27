@@ -13,7 +13,7 @@ type DailyQuestion struct {
 	QuestionDate time.Time `gorm:"index"`
 	CreatedAt    time.Time
 	Divination   Divination
-	Embedding    pgvector.Vector `gorm:"type:vector(384)"` // Assuming 384 dim model
+	Embedding    *pgvector.Vector `gorm:"type:vector(384)"` // Assuming 384 dim model
 }
 
 type Divination struct {
