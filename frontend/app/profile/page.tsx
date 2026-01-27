@@ -96,10 +96,15 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                         <label className="text-xs font-medium text-stone-400 uppercase tracking-wider ml-1">生辰 (八字推演基础)</label>
                         <input 
-                            type="datetime-local"
+                            type={form.birth_date ? "datetime-local" : "text"}
+                            placeholder="年/月/日 时:分"
+                            onFocus={(e) => e.currentTarget.type = "datetime-local"}
+                            onBlur={(e) => {
+                                if (!e.currentTarget.value) e.currentTarget.type = "text";
+                            }}
                             value={form.birth_date}
                             onChange={e => setForm({...form, birth_date: e.target.value})}
-                            className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-400/50 transition-all font-serif"
+                            className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-400/50 transition-all font-serif placeholder:text-stone-400"
                         />
                     </div>
 
@@ -111,13 +116,14 @@ export default function ProfilePage() {
                                 <button
                                     key={g}
                                     onClick={() => setForm({...form, gender: g})}
-                                    className={`flex-1 py-2.5 rounded-xl text-sm font-serif transition-all border ${
+                                    className={`flex-1 py-3 rounded-xl transition-all border flex items-center justify-center gap-2 ${
                                         form.gender === g 
                                         ? "bg-stone-800 text-white border-stone-800 shadow-md" 
-                                        : "bg-white text-stone-500 border-stone-200 hover:bg-stone-50"
+                                        : "bg-white text-stone-400 border-stone-200 hover:bg-stone-50"
                                     }`}
                                 >
-                                    {g}
+                                    <span className="text-xl">{g === "男" ? "♂" : "♀"}</span>
+                                    <span className="text-sm font-serif">{g}</span>
                                 </button>
                             ))}
                          </div>
@@ -126,27 +132,41 @@ export default function ProfilePage() {
                     {/* Zodiac */}
                     <div className="space-y-2">
                         <label className="text-xs font-medium text-stone-400 uppercase tracking-wider ml-1">星座 (星盘归属)</label>
-                        <select 
-                             value={form.zodiac}
-                             onChange={e => setForm({...form, zodiac: e.target.value})}
-                             className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-400/50 appearance-none font-serif"
-                        >
-                            <option value="">未选择</option>
-                            {ZODIACS.map(z => <option key={z} value={z}>{z}</option>)}
-                        </select>
+                        <div className="grid grid-cols-4 gap-2">
+                            {ZODIACS.map(z => (
+                                <button
+                                    key={z}
+                                    onClick={() => setForm({...form, zodiac: z})}
+                                    className={`py-2 rounded-lg text-xs font-serif transition-all border ${
+                                        form.zodiac === z
+                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                                        : "bg-white text-stone-500 border-stone-100 hover:bg-stone-50 hover:border-stone-200"
+                                    }`}
+                                >
+                                    {z}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* MBTI */}
                     <div className="space-y-2">
                         <label className="text-xs font-medium text-stone-400 uppercase tracking-wider ml-1">MBTI (心性类别)</label>
-                        <select 
-                             value={form.mbti}
-                             onChange={e => setForm({...form, mbti: e.target.value})}
-                             className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-400/50 appearance-none font-serif"
-                        >
-                            <option value="">未选择</option>
-                            {MBTIS.map(m => <option key={m} value={m}>{m}</option>)}
-                        </select>
+                        <div className="grid grid-cols-4 gap-2">
+                            {MBTIS.map(m => (
+                                <button
+                                    key={m}
+                                    onClick={() => setForm({...form, mbti: m})}
+                                    className={`py-2 rounded-lg text-[10px] font-medium tracking-wider transition-all border ${
+                                        form.mbti === m
+                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                                        : "bg-white text-stone-500 border-stone-100 hover:bg-stone-50 hover:border-stone-200"
+                                    }`}
+                                >
+                                    {m}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
