@@ -61,6 +61,8 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 	var contextStr string
 	if v, err := s.llm.Embed(ctx, req.Question); err == nil {
 		vec = v
+		fmt.Printf("[Vector] Embed success. Dims: %d\n", len(v))
+
 		// Search similar
 		var similar []db.DailyQuestion
 		if err := s.postgres.
@@ -69,6 +71,8 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 			Order(gorm.Expr("embedding <-> ?", pgvector.NewVector(vec))).
 			Limit(2).
 			Find(&similar).Error; err == nil {
+
+			fmt.Printf("[Vector] Found %d similar items\n", len(similar))
 
 			var contexts []string
 			for _, q := range similar {
