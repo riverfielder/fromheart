@@ -238,9 +238,11 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	if w.apiKey == "" {
 		return nil, errors.New("missing WENXIN_API_KEY")
 	}
-
+	
+	// Use "Embedding-V1" which is the standard Qianfan embedding model name (384 dim)
+	// If using bge-large-zh, dimension would be 1024, requiring DB schema change.
 	payload := map[string]interface{}{
-		"model": "text-embedding-v1", // Using a likely available model name for proxy
+		"model": "Embedding-V1", 
 		"input": text,
 	}
 
@@ -249,7 +251,7 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 		return nil, err
 	}
 
-	// Assuming OpenAI-compatible proxy structure based on GenerateAnswer
+	// Assuming OpenAI-compatible proxy structure
 	endpoint := w.baseURL + "/v1/embeddings"
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
@@ -285,9 +287,7 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	}
 
 	return parsed.Data[0].Embedding, nil
-}
-
-func formatContext(ctx string) string {
+}func formatContext(ctx string) string {
 	if ctx == "" {
 		return ""
 	}
