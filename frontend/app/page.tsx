@@ -11,6 +11,7 @@ import ResultDisplay from "../components/ResultDisplay";
 import LoadingAnimation from "../components/LoadingAnimation";
 import DonationModal from "../components/DonationModal";
 import ShareModal from "../components/ShareModal";
+import WoodenFish from "../components/WoodenFish";
 
 export default function HomePage() {
   const [question, setQuestion] = useState("");
@@ -30,6 +31,10 @@ export default function HomePage() {
   const [devSecret, setDevSecret] = useState("");
   const [devModeActive, setDevModeActive] = useState(false);
   const [devToast, setDevToast] = useState<string | null>(null);
+
+  // Ritual State
+  const [pressProgress, setPressProgress] = useState(0);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     getDailyPoem().then((res) => setPoem(res.poem)).catch(() => {});
@@ -86,6 +91,39 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePressStart = () => {
+    if (loading || !question.trim()) {
+       if (!question.trim()) setError("请输入问题");
+       return;
+    }
+    setError(null);
+    setPressProgress(0);
+    
+    // Start filling
+    const id = setInterval(() => {
+      setPressProgress((prev) => {
+        if (prev >= 100) {
+           clearInterval(id);
+           return 100;
+        }
+        return prev + 4; // Approx 2.5s to fill
+      });
+    }, 50);
+    setIntervalId(id);
+  };
+
+  const handlePressEnd = () => {
+    if (intervalId) clearInterval(intervalId);
+    setIntervalId(null);
+
+    // If fully pressed, submit
+    if (pressProgress >= 100) {
+       handleAsk();
+    } 
+    // Reset
+    setPressProgress(0);
   };
   
   const handleOpenDonation = async () => {
@@ -228,23 +266,53 @@ export default function HomePage() {
         <motion.button
           whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.2)" }}
           whileTap={{ scale: 0.98 }}
-          className={`px-8 py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${
+          onMouseDown={handlePressStart}
+          onMouseUp={handlePressEnd}
+          onMouseLeave={handlePressEnd}
+          onTouchStart={handlePressStart}
+          onTouchEnd={handlePressEnd}
+          className={`px-8 py-3 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
             loading 
-              ? "bg-emerald-50 text-emerald-400 cursor-not-allowed" 
+              ? "bg-stone-50 text-stone-400 cursor-not-allowed border border-stone-100" 
               : "bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white shadow-emerald-200/50 shadow-lg"
           }`}
-          onClick={handleAsk}
           disabled={loading}
         >
+          {/* Progress Fill Background */}
+          {!loading && pressProgress > 0 && (
+             <motion.div 
+               className="absolute inset-0 bg-white/20 z-0 origin-left"
+               initial={{ scaleX: 0 }}
+               animate={{ scaleX: pressProgress / 100 }}
+               transition={{ duration: 0.1 }}
+             />
+          )}
+
+          <span className="relative z-10">
           {loading ? (
-             <LoadingAnimation loading={loading} />
-          ) : "今日问"}
+             "等待中..."
+          ) : (
+             pressProgress > 0 ? ( pressProgress >= 100 ? "松开起卦" : "诚心..." ) : "诚心一问 (长按)"
+          )}
+          </span>
         </motion.button>
         </div>
       </motion.section>
 
       <AnimatePresence mode="wait">
+        {loading ? (
+           <motion.section
+             key="wooden-fish"
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             exit={{ opacity: 0, scale: 0.9 }}
+             className="bg-stone-50/80 backdrop-blur-md rounded-3xl p-6 border border-stone-200/50 flex flex-col items-center"
+           >
+              <WoodenFish />
+           </motion.section>
+        ) : (
         <motion.section 
+          key="result-section"
           layout
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -266,6 +334,7 @@ export default function HomePage() {
 
           <p className="text-[10px] text-center text-gray-400 pt-2 opacity-60">仅供参考，不构成现实决策依据。</p>
         </motion.section>
+        )}
       </AnimatePresence>
 
       <motion.div 
