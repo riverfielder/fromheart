@@ -69,7 +69,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 			Order(gorm.Expr("embedding <-> ?", pgvector.NewVector(vec))).
 			Limit(2).
 			Find(&similar).Error; err == nil {
-			
+
 			var contexts []string
 			for _, q := range similar {
 				// Only use if it has a real divination and is not the exact same question string (though unlikely with float comparison, duplicate inputs possible)
@@ -102,7 +102,9 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 
 	if err := s.postgres.Create(&question).Error; err != nil {
 		return AskResponse{}, err
-	}	raw, err := s.llm.GenerateAnswer(ctx, llm.GenerateRequest{
+	}
+
+	raw, err := s.llm.GenerateAnswer(ctx, llm.GenerateRequest{
 		Question:      req.Question,
 		BenGua:        result.BenGua,
 		BianGua:       result.BianGua,

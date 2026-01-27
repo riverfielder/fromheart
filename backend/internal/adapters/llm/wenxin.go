@@ -238,11 +238,11 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	if w.apiKey == "" {
 		return nil, errors.New("missing WENXIN_API_KEY")
 	}
-	
+
 	// Use "Embedding-V1" which is the standard Qianfan embedding model name (384 dim)
 	// If using bge-large-zh, dimension would be 1024, requiring DB schema change.
 	payload := map[string]interface{}{
-		"model": "Embedding-V1", 
+		"model": "Embedding-V1",
 		"input": text,
 	}
 
@@ -287,7 +287,9 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	}
 
 	return parsed.Data[0].Embedding, nil
-}func formatContext(ctx string) string {
+}
+
+func formatContext(ctx string) string {
 	if ctx == "" {
 		return ""
 	}
