@@ -50,7 +50,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		if err != nil {
 			return AskResponse{}, err
 		}
-		if count >= 3 {
+		if count >= 10 {
 			return AskResponse{}, ErrDailyLimitReached
 		}
 	}

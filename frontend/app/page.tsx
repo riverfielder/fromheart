@@ -309,7 +309,7 @@ export default function HomePage() {
         <textarea
           className="w-full bg-white/50 border-transparent rounded-2xl p-4 text-gray-700 placeholder:text-gray-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-100/50 focus:bg-white/80 transition-all duration-300 resize-none shadow-sm hover:shadow-md hover:bg-white/60"
           rows={4}
-          placeholder="写下今天唯一的问题..."
+          placeholder="写下今天的问题..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />

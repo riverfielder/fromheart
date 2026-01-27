@@ -56,7 +56,7 @@ func (w *WenxinClient) GenerateAnswer(ctx context.Context, req GenerateRequest) 
 		if req.UserProfile.MBTI != "" {
 			userDesc += fmt.Sprintf("- MBTI心性：%s\n", req.UserProfile.MBTI)
 		}
-		userDesc += "请结合求测者的个人画像（如MBTI思维模式、命理特质等）进行定制化解读，使建议更贴合其本心。\n"
+		userDesc += "请结合求测者的个人画像（性别，生辰，星座，MBTI）进行定制化解读，使建议更贴合其本心。\n"
 	}
 
 	payload := map[string]interface{}{
