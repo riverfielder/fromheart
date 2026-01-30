@@ -195,7 +195,11 @@ export interface Wish {
 }
 
 export async function getWishes() {
-  const res = await fetch(`${API_BASE}/api/wishes`, { ...fetchOptions, headers: getHeaders() });
+  const res = await fetch(`${API_BASE}/api/wishes`, { 
+    ...fetchOptions, 
+    headers: getHeaders(),
+    cache: "no-store" // Ensure fresh data
+  });
   if (!res.ok) throw new Error("Failed to fetch wishes");
   return res.json() as Promise<Wish[]>;
 }
