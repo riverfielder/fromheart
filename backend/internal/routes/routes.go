@@ -8,11 +8,12 @@ import (
 	"fromheart/internal/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
-func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHandler, cfg config.Config) *gin.Engine {
+func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHandler, cfg config.Config, rdb *redis.Client) *gin.Engine {
 	r := gin.Default()
-	r.Use(middleware.RateLimit())
+	r.Use(middleware.RateLimit(rdb))
 	r.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 		if origin != "" {

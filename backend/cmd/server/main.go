@@ -28,7 +28,7 @@ func main() {
 	questionHandler := handlers.NewQuestionHandler(questionService)
 	authHandler := handlers.NewAuthHandler(postgres, cfg)
 
-	router := routes.NewRouter(questionHandler, authHandler, cfg)
+	router := routes.NewRouter(questionHandler, authHandler, cfg, redisClient)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
