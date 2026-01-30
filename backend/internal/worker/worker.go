@@ -20,32 +20,40 @@ import (
 type Worker struct {
 	q           *queue.Queue
 	qs          *services.QuestionService
-	loveHandler *handlers.LoveHandler // 复用 LoveHandler 中的逻辑（或者应该把逻辑移到 Service）
-	// 由于 Love 的逻辑主要在 Handler 里（这是一个之前的架构小缺陷），我们暂时在 Worker 里重新实现一部分，
-	// 或者为了快速重构，我们引入必要的依赖来手动执行 Love 逻辑。
-	db  *gorm.DB
-	llm llm.Client
+	loveHandler *handlers.LoveHandler
+	db          *gorm.DB
+	llm         llm.Client
+	// Rate Limiter
+	limitTicker *time.Ticker
 }
 
 func NewWorker(q *queue.Queue, qs *services.QuestionService, db *gorm.DB, llm llm.Client) *Worker {
+	// API Limit: 3 QPS => 1 request every 333ms
+	// We use a Ticker to control the rate of dequeueing
 	return &Worker{
-		q:   q,
-		qs:  qs,
-		db:  db,
-		llm: llm,
+		q:           q,
+		qs:          qs,
+		db:          db,
+		llm:         llm,
+		limitTicker: time.NewTicker(340 * time.Millisecond), // Slightly more than 333ms to be safe
 	}
 }
 
 func (w *Worker) Start(concurrency int) {
+	log.Printf("[Worker] Started %d workers with 3 QPS limit", concurrency)
 	for i := 0; i < concurrency; i++ {
 		go w.loop(i)
 	}
-	log.Printf("[Worker] Started %d workers", concurrency)
 }
 
 func (w *Worker) loop(id int) {
 	for {
+		// 1. Rate Limit Wait
+		// All workers compete for the tick. This ensures global rate limit.
+		<-w.limitTicker.C
+
 		ctx := context.Background()
+		// 2. Dequeue
 		taskID, payload, err := w.q.Dequeue(ctx)
 		if err != nil {
 			log.Printf("[Worker %d] Redis error: %v", id, err)

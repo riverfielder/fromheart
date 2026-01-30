@@ -30,7 +30,7 @@ func main() {
 	// Async Queue & Worker
 	queueClient := queue.NewQueue(redisClient)
 	aiWorker := worker.NewWorker(queueClient, questionService, postgres, llmClient)
-	go aiWorker.Start(10) // Start 10 concurrent workers
+	go aiWorker.Start(30) // Start 30 concurrent workers (Rate limited to 3 QPS internally)
 
 	questionHandler := handlers.NewQuestionHandler(questionService, queueClient)
 	authHandler := handlers.NewAuthHandler(postgres, cfg)
