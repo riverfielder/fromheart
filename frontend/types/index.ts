@@ -2,6 +2,7 @@ export type Output = {
   direct_answer: string;
   summary: string;
   colloquial_explanation?: string;
+  philosophical_suggestion?: string;
   advice: string[];
   warnings: string[];
   keywords: string[];

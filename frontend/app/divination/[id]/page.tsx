@@ -68,8 +68,22 @@ export default function DivinationDetailPage() {
           }
         }
       })
-      .catch(() => setError("加载失败"));
+      .catch((err) => {
+        // If 403 or 404, we want to show the specific "Access Denied / Spy on Heaven" page.
+        // Since api.ts throws generic Error("request failed") for 403 currently in getDivination, 
+        // we should try to detect if it's an access issue or just network error.
+        // But the simplest way to render the Not Found page is using Next.js notFound()
+        // However, notFound() only works in Server Components or during initial render logic, 
+        // but here we are in useEffect (Client Component).
+        // So we can set a specific error state and render the NotFound component, 
+        // or redirect.
+        setError("load_failed");
+      });
   }, [params]);
+
+  if (error === "load_failed") {
+    return <NotFoundUI />;
+  }
 
   return (
     <main className="space-y-6">
@@ -158,59 +172,80 @@ export default function DivinationDetailPage() {
             </div>
           </section>
 
-          {/* 追问聊天区域 */}
-          <section className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-sm border border-stone-100">
-            <h2 className="text-xs font-medium text-stone-400 mb-4 uppercase tracking-wide">
-              向大师追问
-            </h2>
-            
-            <div className="space-y-4 mb-6">
-                {messages.length === 0 && (
-                   <div className="text-center text-stone-400 py-4 text-sm font-serif italic">
-                      “若有未尽之意，尽可问来...”
-                   </div>
-                )}
-                {messages.map((m, i) => (
-                    <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                            m.role === 'user' 
-                            ? 'bg-stone-800 text-stone-50 rounded-br-none' 
-                            : 'bg-stone-100 text-stone-700 rounded-bl-none'
-                        }`}>
-                            {m.content}
-                        </div>
-                    </div>
-                ))}
-                {chatLoading && (
-                    <div className="flex justify-start animate-pulse">
-                       <div className="bg-stone-50 rounded-2xl px-4 py-3 text-sm text-stone-400">
-                         大师正在沉思...
-                       </div>
-                    </div>
-                )}
-            </div>
-
-            <div className="flex gap-2">
-                <input 
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSend()}
-                    placeholder="对卦象有疑问？继续追问..."
-                    className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 transition-all font-serif"
-                    disabled={chatLoading}
-                />
-                <button 
-                    onClick={handleSend}
-                    disabled={chatLoading || !input.trim()}
-                    className="bg-stone-800 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-stone-700 disabled:opacity-50 disabled:hover:bg-stone-800 transition-colors"
-                >
-                    发送
-                </button>
-            </div>
-          </section>
-
+          {/* 哲理建议 */}
+          {parsedRaw?.philosophical_suggestion && (
+              <div className="mt-6 pt-6 border-t border-stone-100">
+                  <h3 className="text-sm font-bold text-stone-500 mb-2">君子之道</h3>
+                  <p className="text-stone-700 leading-7 bg-stone-50 p-4 rounded-lg border border-stone-200">
+                      {parsedRaw.philosophical_suggestion}
+                  </p>
+              </div>
+          )}
         </div>
       )}
+
+      {/* 追问部分 */}
+      {parsedRaw && (
+        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-sm border border-stone-100">
+          <h2 className="text-lg font-serif mb-4">追问大师</h2>
+          <div className="space-y-4 mb-4 max-h-[400px] overflow-y-auto">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`p-3 rounded-lg text-sm ${
+                msg.role === 'user' ? 'bg-stone-100 ml-8' : 'bg-emerald-50 mr-8 border border-emerald-100'
+              }`}>
+                <p className="font-bold mb-1 text-xs opacity-50">{msg.role === 'user' ? '缘主' : '大师'}</p>
+                <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+              </div>
+            ))}
+            {chatLoading && (
+               <div className="p-3 bg-emerald-50 mr-8 rounded-lg border border-emerald-100 animate-pulse">
+                  <span className="text-xs text-emerald-800">大师正在推演...</span>
+               </div>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <input 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="对卦象有疑问？可以继续追问..."
+              className="flex-1 px-4 py-2 rounded-full border border-stone-200 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              disabled={chatLoading}
+            />
+            <button 
+              onClick={handleSend}
+              disabled={chatLoading}
+              className="bg-emerald-800 text-white px-6 py-2 rounded-full text-sm hover:bg-emerald-900 transition-colors disabled:opacity-50"
+            >
+              请教
+            </button>
+          </div>
+        </section>
+      )}
     </main>
+  );
+}
+
+function NotFoundUI() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-6">
+        <div className="text-4xl text-emerald-900/20 font-serif">☁</div>
+        <div className="space-y-2">
+            <h2 className="text-lg font-serif text-stone-800 tracking-widest font-medium">
+                勿探天机
+            </h2>
+            <p className="text-xs text-stone-500 font-serif leading-relaxed">
+                缘分未到，不必强求。<br/>
+                此卦象不属于您，或已散佚于天地之间。
+            </p>
+        </div>
+        <a 
+            href="/"
+            className="px-6 py-2 rounded-full border border-stone-200 text-stone-600 text-xs tracking-widest hover:bg-stone-50 transition-colors"
+        >
+            返回问道
+        </a>
+    </div>
   );
 }
