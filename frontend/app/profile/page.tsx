@@ -113,7 +113,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                          <label className="text-xs font-medium text-stone-400 uppercase tracking-wider ml-1">性别 (阴阳取象)</label>
                          <div className="flex gap-4">
-                            {["男", "女"].map(g => (
+                            {["male", "female"].map(g => (
                                 <button
                                     key={g}
                                     onClick={() => setForm({...form, gender: g})}
