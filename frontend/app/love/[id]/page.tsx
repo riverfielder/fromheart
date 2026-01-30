@@ -85,18 +85,18 @@ export default function LoveDetailPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#fff0f5] relative font-serif text-stone-800 pb-20">
-             <header className="fixed top-0 w-full p-4 flex justify-between items-center z-20 bg-[#fff0f5]/80 backdrop-blur-md border-b border-pink-100">
-                <Link href="/history" className="text-stone-500 hover:text-[#d45d79] transition-colors">
-                    ← 列表
-                </Link>
-                <h1 className="text-lg tracking-widest text-[#d45d79] font-medium">
-                    {detail.name_a} & {detail.name_b}
-                </h1>
-                <div className="w-10"/>
-            </header>
+        <div className="min-h-screen bg-[#fff0f5] relative font-serif text-stone-800 pb-20 pt-6">
+            <main className="container mx-auto px-4 max-w-lg space-y-6">
+                 {/* Top Navigation & Names */}
+                 <div className="flex justify-between items-center px-2">
+                    <Link href="/history" className="text-stone-400 hover:text-[#d45d79] transition-colors text-sm flex items-center gap-1">
+                        ← 返回列表
+                    </Link>
+                    <h1 className="text-lg tracking-widest text-[#d45d79] font-medium font-serif">
+                        {detail.name_a} <span className="text-stone-300 text-xs mx-1">&</span> {detail.name_b}
+                    </h1>
+                 </div>
 
-            <main className="container mx-auto px-4 pt-20 max-w-lg space-y-6">
                  {/* Story Card */}
                  <div className="bg-white p-6 rounded-3xl shadow-sm border border-pink-50">
                     <h3 className="text-xs text-[#d45d79] font-bold uppercase tracking-wider mb-2">缘起</h3>
