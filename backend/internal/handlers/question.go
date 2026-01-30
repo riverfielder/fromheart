@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -266,4 +268,57 @@ func (h *QuestionHandler) Chat(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"response": response,
 	})
+}
+
+func (h *QuestionHandler) ChatStream(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req chatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// ACCESS CONTROL: Verify ownership before processing chat
+	div, err := h.service.GetDivination(c.Request.Context(), uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	userIDVal, exists := c.Get("userID")
+	if exists {
+		currentUserID := userIDVal.(uint)
+		if div.DailyQuestion != nil && div.DailyQuestion.UserID != nil {
+			if *div.DailyQuestion.UserID != currentUserID {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: You do not own this divination record"})
+				return
+			}
+		}
+	} else {
+		// Anonymous users cannot access Registered User's records
+		if div.DailyQuestion != nil && div.DailyQuestion.UserID != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: Record belongs to a registered user"})
+			return
+		}
+	}
+
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Transfer-Encoding", "chunked")
+
+	// Use streaming service
+	h.service.ChatStream(c.Request.Context(), uint(id), req.Message, req.History, func(token string) {
+		chunk, _ := json.Marshal(gin.H{"content": token})
+		fmt.Fprintf(c.Writer, "data: %s\n\n", chunk)
+		c.Writer.Flush()
+	})
+
+	fmt.Fprintf(c.Writer, "data: [DONE]\n\n")
+	c.Writer.Flush()
 }

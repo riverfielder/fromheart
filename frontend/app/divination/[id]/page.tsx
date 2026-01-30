@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { getDivination, chat, ChatMessage, getDailyPoem } from "../../../lib/api";
+import { getDivination, chatStream, ChatMessage, getDailyPoem } from "../../../lib/api";
 import { Divination, Output } from "../../../types";
 import Hexagram from "../../../components/Hexagram";
 import ShareModal from "../../../components/ShareModal";
@@ -27,18 +27,37 @@ export default function DivinationDetailPage() {
     if (!input.trim() || chatLoading) return;
     
     // Add user message immediately
-    const userMsg = { role: "user", content: input };
-    const newHistory = [...messages, userMsg];
-    setMessages(newHistory);
+    const userMsg = input.trim();
     setInput("");
+    
+    // Optimistic user update
+    const newHistory = [...messages, { role: "user", content: userMsg } as ChatMessage];
+    setMessages(newHistory);
+    
+    // Placeholder for assistant
+    setMessages(prev => [...prev, { role: "assistant", content: "" } as ChatMessage]);
     setChatLoading(true);
 
     try {
-      const res = await chat(Number(params?.id), userMsg.content, messages);
-      setMessages([...newHistory, { role: "assistant", content: res.response }]);
+      // Use streaming chat
+      const historyForApi = newHistory.map(m => ({ role: m.role, content: m.content }));
+      
+      await chatStream(Number(params?.id), userMsg, historyForApi, (token) => {
+         setMessages(prev => {
+             const last = prev[prev.length - 1];
+             if (last.role === "assistant") {
+                 return [...prev.slice(0, -1), { ...last, content: last.content + token }];
+             }
+             return prev;
+         });
+      });
+      
     } catch (e) {
-      console.error(e);
-      // Optional: show error to user
+      // Error handling
+       setMessages(prev => {
+         const last = prev[prev.length - 1];
+         return [...prev.slice(0, -1), { ...last, content: last.content + "\n[网络连接中断，请重试]" }];
+       });
     } finally {
       setChatLoading(false);
     }

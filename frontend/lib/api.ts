@@ -348,3 +348,48 @@ export async function submitLoveProbe(req: Omit<LoveProbeRequest, 'device_hash'>
     }
     return res.json() as Promise<LoveProbeResponse>;
 }
+
+export async function chatStream(
+    id: number,
+    message: string,
+    history: {role: string, content: string}[],
+    onChunk: (text: string) => void
+) {
+    const res = await fetch(`${API_BASE}/api/divination/${id}/chat/stream`, {
+        ...fetchOptions,
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ message, history })
+    });
+
+    if (!res.ok) throw new Error("Chat failed");
+    if (!res.body) throw new Error("No body");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8"); // Force UTF-8
+
+    // The backend for streaming logic here should be consistent with chatLoveStream we updated
+    // which uses manual json chunks
+    
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n\n");
+        for (const line of lines) {
+            if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") return;
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.content) {
+                        onChunk(parsed.content);
+                    }
+                } catch (e) {
+                    // Ignore parsing errors for partial chunks
+                }
+            }
+        }
+    }
+}

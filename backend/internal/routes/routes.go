@@ -48,6 +48,7 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		api.POST("/question", handler.Ask)
 		api.GET("/divination/:id", handler.GetDivination)
 		api.POST("/divination/:id/chat", handler.Chat)
+		api.POST("/divination/:id/chat/stream", handler.ChatStream)
 		api.GET("/history", handler.History)
 		api.GET("/poem", handler.GetPoem)
 		api.GET("/usage", handler.GetUsage)
