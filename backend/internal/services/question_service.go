@@ -20,13 +20,14 @@ import (
 var ErrDailyLimitReached = errors.New("daily_limit_reached")
 
 type QuestionService struct {
-	postgres *gorm.DB
-	redis    *redis.Client
-	llm      llm.Client
+	postgres    *gorm.DB
+	redis       *redis.Client
+	llm         llm.Client
+	adminSecret string
 }
 
-func NewQuestionService(postgres *gorm.DB, redis *redis.Client, llmClient llm.Client) *QuestionService {
-	return &QuestionService{postgres: postgres, redis: redis, llm: llmClient}
+func NewQuestionService(postgres *gorm.DB, redis *redis.Client, llmClient llm.Client, adminSecret string) *QuestionService {
+	return &QuestionService{postgres: postgres, redis: redis, llm: llmClient, adminSecret: adminSecret}
 }
 
 type AskRequest struct {
@@ -67,16 +68,18 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		// Search similar
 		var similar []db.DailyQuestion
 		query := s.postgres.Preload("Divination").Where("embedding IS NOT NULL")
-
-		// Improve search to respect privacy? For now, search across all is fine as anonymity is key for guests.
-		// But maybe for users we should restrict?
-		// "The AI remembers past questions provided by the user" -> Implies shared knowledge base or personal?
-		// Typically shared knowledge base in this context is fine, but privacy?
-		// Given it's "vector memory", usually it implies specific context.
-		// For now let's keep it global or maybe just scoped to user if user exists?
-		// Let's keep global for now as "collective wisdom" unless asked otherwise.
-		// Actually, standard RAG often uses private docs. But here it seems like "history".
-		// Let's keep it simplest: Global search.
+		
+		// PRIVACY FIX: Only search within the user's OWN history.
+		// We must not leak other users' questions into the context of another user.
+		if req.UserID != nil {
+			query = query.Where("user_id = ?", *req.UserID)
+		} else {
+			// For anonymous users, we can either:
+			// 1. Search only their current device hash (weak, but better than global)
+			// 2. Disable RAG (Safe)
+			// Let's go with Option 1: Device Scope
+			query = query.Where("device_hash = ?", req.DeviceHash)
+		}
 
 		if err := query.
 			Order(gorm.Expr("embedding <-> ?", pgvector.NewVector(vec))).
@@ -248,7 +251,8 @@ type AdminQuestion struct {
 }
 
 func (s *QuestionService) GetAllQuestions(ctx context.Context, secret string) ([]AdminQuestion, error) {
-	if secret != "loveriver" {
+	// Constant time comparison roughly, but strictly simple equals is fine for this context
+	if secret != s.adminSecret {
 		return nil, errors.New("unauthorized")
 	}
 

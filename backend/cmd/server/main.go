@@ -23,7 +23,7 @@ func main() {
 	redisClient := cache.NewRedis(cfg)
 
 	llmClient := llm.NewWenxinClient(cfg)
-	questionService := services.NewQuestionService(postgres, redisClient, llmClient)
+	questionService := services.NewQuestionService(postgres, redisClient, llmClient, cfg.AdminSecret)
 
 	questionHandler := handlers.NewQuestionHandler(questionService)
 	authHandler := handlers.NewAuthHandler(postgres, cfg)

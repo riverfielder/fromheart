@@ -10,12 +10,18 @@ type Config struct {
 	WenxinModel   string
 	WenxinBaseURL string
 	JWTSecret     string
+	AdminSecret   string
 }
 
 func Load() Config {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default_secret_please_change_in_production"
+	}
+
+	adminSecret := os.Getenv("ADMIN_SECRET")
+	if adminSecret == "" {
+		adminSecret = "loveriver" // Default for dev, should be changed
 	}
 
 	return Config{
@@ -26,5 +32,6 @@ func Load() Config {
 		WenxinModel:   os.Getenv("WENXIN_MODEL"),
 		WenxinBaseURL: os.Getenv("WENXIN_BASE_URL"),
 		JWTSecret:     jwtSecret,
+		AdminSecret:   adminSecret,
 	}
 }

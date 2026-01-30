@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { getMe, updateProfile } from "../../lib/api";
+import { getMe, updateProfile, logout } from "../../lib/api";
 import { User } from "../../types";
 
 const ZODIACS = [
@@ -186,8 +186,8 @@ export default function ProfilePage() {
             
             <div className="mt-8 text-center">
                  <button 
-                    onClick={() => {
-                        localStorage.removeItem("token");
+                    onClick={async () => {
+                        await logout();
                         window.location.href = "/";
                     }}
                     className="text-xs text-stone-400 hover:text-red-400 transition-colors border-b border-dashed border-stone-200 hover:border-red-200 pb-0.5"

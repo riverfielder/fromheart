@@ -1,32 +1,37 @@
 // Use current origin by default (empty string), enabling reverse proxying
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 
-let token: string | null = null;
-
-if (typeof window !== "undefined") {
-  token = localStorage.getItem("token");
+// Deprecated: Token is now handled via HttpOnly cookies
+// Keeping this for backward compatibility during migration if needed, but it does nothing now.
+export function setAuthToken(t: string | null) {
+  // No-op
 }
 
-export function setAuthToken(t: string | null) {
-  token = t;
-  if (typeof window !== "undefined") {
-    if (t) localStorage.setItem("token", t);
-    else localStorage.removeItem("token");
-  }
+function getCsrfToken() {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp('(^| )csrf_token=([^;]+)'));
+  return match ? match[2] : null;
 }
 
 function getHeaders() {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+  const csrf = getCsrfToken();
+  if (csrf) {
+    headers["X-CSRF-Token"] = csrf;
   }
   return headers;
 }
 
+// Common fetch options for credentialed requests
+const fetchOptions: RequestInit = {
+    credentials: "include", // This is crucial for sending/receiving Cookies
+};
+
 export async function register(username: string, password: string) {
     const res = await fetch(`${API_BASE}/api/register`, {
+        ...fetchOptions,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(), // CSRF token might be needed if we set it on initial load
         body: JSON.stringify({ username, password }),
     });
     if (!res.ok) {
@@ -38,8 +43,9 @@ export async function register(username: string, password: string) {
 
 export async function login(username: string, password: string) {
     const res = await fetch(`${API_BASE}/api/login`, {
+        ...fetchOptions,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify({ username, password }),
     });
     if (!res.ok) {
@@ -48,8 +54,16 @@ export async function login(username: string, password: string) {
     return res.json();
 }
 
+export async function logout() {
+    await fetch(`${API_BASE}/api/logout`, {
+        ...fetchOptions,
+        method: "POST",
+        headers: getHeaders(),
+    });
+}
+
 export async function getMe() {
-    const res = await fetch(`${API_BASE}/api/me`, { headers: getHeaders() }); 
+    const res = await fetch(`${API_BASE}/api/me`, { ...fetchOptions, headers: getHeaders() }); 
     if (!res.ok) throw new Error("Unauthorized");
     const data = await res.json();
     return data.user;
@@ -57,6 +71,7 @@ export async function getMe() {
 
 export async function askQuestion(question: string, deviceHash: string, secret?: string) {
   const res = await fetch(`${API_BASE}/api/question`, {
+    ...fetchOptions,
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify({ question, device_hash: deviceHash, secret }),
@@ -71,7 +86,7 @@ export async function askQuestion(question: string, deviceHash: string, secret?:
 }
 
 export async function getHistory(deviceHash: string) {
-  const res = await fetch(`${API_BASE}/api/history?device_hash=${deviceHash}`, { headers: getHeaders() });
+  const res = await fetch(`${API_BASE}/api/history?device_hash=${deviceHash}`, { ...fetchOptions, headers: getHeaders() });
   if (!res.ok) {
     throw new Error("request failed");
   }
@@ -79,7 +94,7 @@ export async function getHistory(deviceHash: string) {
 }
 
 export async function getDivination(id: number) {
-  const res = await fetch(`${API_BASE}/api/divination/${id}`, { headers: getHeaders() });
+  const res = await fetch(`${API_BASE}/api/divination/${id}`, { ...fetchOptions, headers: getHeaders() });
   if (!res.ok) {
     throw new Error("request failed");
   }
@@ -87,7 +102,7 @@ export async function getDivination(id: number) {
 }
 
 export async function getDailyPoem() {
-  const res = await fetch(`${API_BASE}/api/poem`, { headers: getHeaders() });
+  const res = await fetch(`${API_BASE}/api/poem`, { ...fetchOptions, headers: getHeaders() });
   if (!res.ok) {
     throw new Error("request failed");
   }
@@ -95,7 +110,7 @@ export async function getDailyPoem() {
 }
 
 export async function getUsage(deviceHash: string) {
-  const res = await fetch(`${API_BASE}/api/usage?device_hash=${deviceHash}`, { headers: getHeaders() });
+  const res = await fetch(`${API_BASE}/api/usage?device_hash=${deviceHash}`, { ...fetchOptions, headers: getHeaders() });
   if (!res.ok) {
     throw new Error("request failed");
   }
@@ -103,7 +118,7 @@ export async function getUsage(deviceHash: string) {
 }
 
 export async function getBlessing() {
-  const res = await fetch(`${API_BASE}/api/blessing`);
+  const res = await fetch(`${API_BASE}/api/blessing`, { ...fetchOptions });
   if (!res.ok) {
     throw new Error("request failed");
   }
@@ -112,8 +127,10 @@ export async function getBlessing() {
 
 export async function getAdminQuestions(secret: string) {
   const res = await fetch(`${API_BASE}/api/admin/questions`, {
+    ...fetchOptions,
     headers: {
       "X-Admin-Secret": secret,
+      ...getHeaders() // Add CSRF if needed for Get (usually not, but consistency)
     }
   });
   if (!res.ok) {
@@ -124,6 +141,7 @@ export async function getAdminQuestions(secret: string) {
 
 export async function getAllQuestions(adminSecret: string) {
     const res = await fetch(`${API_BASE}/api/admin/questions`,{
+      ...fetchOptions,
       headers: {
         ...getHeaders(),
         "X-Admin-Secret": adminSecret
@@ -141,6 +159,7 @@ export interface ChatMessage {
 
 export async function chat(id: number, message: string, history: ChatMessage[]) {
   const res = await fetch(`${API_BASE}/api/divination/${id}/chat`, {
+    ...fetchOptions,
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify({ message, history }),
@@ -158,6 +177,7 @@ export async function updateProfile(data: {
   zodiac?: string;
 }) {
   const res = await fetch(`${API_BASE}/api/me`, {
+    ...fetchOptions,
     method: "PUT",
     headers: getHeaders(),
     body: JSON.stringify(data),

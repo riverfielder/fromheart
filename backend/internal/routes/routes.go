@@ -14,9 +14,13 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 	r := gin.Default()
 	r.Use(middleware.RateLimit())
 	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		origin := c.Request.Header.Get("Origin")
+		if origin != "" {
+			c.Header("Access-Control-Allow-Origin", origin) // Echo the origin to support credentials
+		}
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS, DELETE")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token") // Added X-CSRF-Token
+		c.Header("Access-Control-Allow-Credentials", "true")                                  // Essential for Cookies
 		c.Header("Access-Control-Max-Age", "86400")
 		if c.Request.Method == http.MethodOptions {
 			c.Status(204)
@@ -26,11 +30,15 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 	})
 
 	api := r.Group("/api")
-	// Apply Optional Auth to all API routes, so handlers can use userID if present
+	// Apply Optional Auth to all API routes
 	api.Use(middleware.OptionalAuthMiddleware(cfg))
+	// Apply CSRF protection
+	api.Use(middleware.CSRF())
+
 	{
 		api.POST("/register", authHandler.Register)
 		api.POST("/login", authHandler.Login)
+		api.POST("/logout", authHandler.Logout)
 
 		// Me requires auth
 		api.GET("/me", middleware.RequireAuthMiddleware(), authHandler.Me)

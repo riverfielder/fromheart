@@ -14,19 +14,30 @@ import (
 // It enables "Guest or User" mode
 func OptionalAuthMiddleware(cfg config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		tokenString := ""
+
+		// 1. Try Cookie first (HttpOnly)
+		if cookie, err := c.Cookie("token"); err == nil {
+			tokenString = cookie
+		}
+
+		// 2. Fallback to Header (Bearer) for backward compatibility or mobile apps
+		if tokenString == "" {
+			authHeader := c.GetHeader("Authorization")
+			if authHeader != "" {
+				parts := strings.Split(authHeader, " ")
+				if len(parts) == 2 && parts[0] == "Bearer" {
+					tokenString = parts[1]
+				}
+			}
+		}
+
+		if tokenString == "" {
 			c.Next()
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.Next()
-			return
-		}
-
-		claims, err := auth.ParseToken(parts[1], cfg.JWTSecret)
+		claims, err := auth.ParseToken(tokenString, cfg.JWTSecret)
 		if err == nil {
 			c.Set("userID", claims.UserID)
 		}

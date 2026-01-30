@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, PropsWithChildren } from 'react';
-import { getMe, setAuthToken, login as apiLogin, register as apiRegister } from '../../lib/api';
+import { getMe, setAuthToken, login as apiLogin, register as apiRegister, logout as apiLogout } from '../../lib/api';
 
 interface User {
   id: number;
@@ -13,7 +13,7 @@ interface AuthContextType {
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   login: async () => {},
   register: async () => {},
-  logout: () => {},
+  logout: async () => {},
 });
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
@@ -29,36 +29,38 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setAuthToken(token);
-      getMe()
-        .then((u) => setUser(u))
-        .catch(() => {
-          setAuthToken(null);
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    // With HttpOnly cookies, we just try to fetch the user profile.
+    // Explicit token management in localStorage is removed.
+    getMe()
+      .then((u) => setUser(u))
+      .catch(() => {
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (username: string, password: string) => {
     const data = await apiLogin(username, password);
-    setAuthToken(data.token);
+    // Token is now in HttpOnly cookie
     setUser(data.user);
   };
 
   const register = async (username: string, password: string) => {
     const data = await apiRegister(username, password);
-    setAuthToken(data.token);
+    // Token is now in HttpOnly cookie
     setUser(data.user);
   };
 
-  const logout = () => {
-    setAuthToken(null);
+  const logout = async () => {
+    try {
+      await apiLogout();
+    } catch (e) {
+      console.error("Logout failed", e);
+    }
+    setAuthToken(null); // No-op but keeps structure
     setUser(null);
+    // Optionally clear local storage if we used it for other things
+    localStorage.removeItem("token");
   };
 
   return (
