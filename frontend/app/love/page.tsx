@@ -12,19 +12,19 @@ export default function LovePage() {
   
   // Form State
   const [nameA, setNameA] = useState("");
-  const [genderA, setGenderA] = useState("male");
+  const [genderA, setGenderA] = useState("");
   const [birthA, setBirthA] = useState("");
   
   const [nameB, setNameB] = useState("");
-  const [genderB, setGenderB] = useState("female");
+  const [genderB, setGenderB] = useState("");
   const [birthB, setBirthB] = useState("");
-  
+
   const [story, setStory] = useState("");
   const [result, setResult] = useState<LoveProbeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!nameA || !nameB || !story || !birthA || !birthB) return;
+    if (!nameA || !genderA || !nameB || !genderB || !story || !birthA || !birthB) return;
     
     setStep("loading");
     
@@ -111,9 +111,10 @@ export default function LovePage() {
                      value={nameA} onChange={e => setNameA(e.target.value)}
                    />
                    <select 
-                     className="bg-white/50 border-b border-stone-200 p-2 outline-none"
+                     className={`bg-white/50 border-b border-stone-200 p-2 outline-none ${!genderA ? 'text-stone-400' : 'text-stone-800'}`}
                      value={genderA} onChange={e => setGenderA(e.target.value)}
                    >
+                     <option value="" disabled>选择性别</option>
                      <option value="male">男</option>
                      <option value="female">女</option>
                    </select>
@@ -136,9 +137,10 @@ export default function LovePage() {
                      value={nameB} onChange={e => setNameB(e.target.value)}
                    />
                    <select 
-                     className="bg-white/50 border-b border-stone-200 p-2 outline-none"
+                     className={`bg-white/50 border-b border-stone-200 p-2 outline-none ${!genderB ? 'text-stone-400' : 'text-stone-800'}`}
                      value={genderB} onChange={e => setGenderB(e.target.value)}
                    >
+                     <option value="" disabled>选择性别</option>
                      <option value="female">女</option>
                      <option value="male">男</option>
                    </select>
@@ -163,7 +165,7 @@ export default function LovePage() {
 
               <button 
                 onClick={handleSubmit}
-                disabled={!nameA || !nameB || !story || !birthA || !birthB}
+                disabled={!nameA || !genderA || !nameB || !genderB || !story || !birthA || !birthB}
                 className="w-full py-4 bg-[#d45d79] text-white rounded-full shadow-lg shadow-pink-300 hover:shadow-pink-400 hover:-translate-y-0.5 transition-all text-lg tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 缔结良缘
