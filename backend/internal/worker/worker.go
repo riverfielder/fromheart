@@ -12,6 +12,7 @@ import (
 	"fromheart/internal/divination"
 	"fromheart/internal/handlers"
 	"fromheart/internal/queue"
+	"fromheart/internal/ratelimit"
 	"fromheart/internal/services"
 
 	"gorm.io/gorm"
@@ -23,24 +24,21 @@ type Worker struct {
 	loveHandler *handlers.LoveHandler
 	db          *gorm.DB
 	llm         llm.Client
-	// Rate Limiter
-	limitTicker *time.Ticker
+	limiter     *ratelimit.GlobalLimiter
 }
 
-func NewWorker(q *queue.Queue, qs *services.QuestionService, db *gorm.DB, llm llm.Client) *Worker {
-	// API Limit: 3 QPS => 1 request every 333ms
-	// We use a Ticker to control the rate of dequeueing
+func NewWorker(q *queue.Queue, qs *services.QuestionService, db *gorm.DB, llm llm.Client, limiter *ratelimit.GlobalLimiter) *Worker {
 	return &Worker{
-		q:           q,
-		qs:          qs,
-		db:          db,
-		llm:         llm,
-		limitTicker: time.NewTicker(340 * time.Millisecond), // Slightly more than 333ms to be safe
+		q:       q,
+		qs:      qs,
+		db:      db,
+		llm:     llm,
+		limiter: limiter,
 	}
 }
 
 func (w *Worker) Start(concurrency int) {
-	log.Printf("[Worker] Started %d workers with 3 QPS limit", concurrency)
+	log.Printf("[Worker] Started %d workers", concurrency)
 	for i := 0; i < concurrency; i++ {
 		go w.loop(i)
 	}
@@ -48,9 +46,8 @@ func (w *Worker) Start(concurrency int) {
 
 func (w *Worker) loop(id int) {
 	for {
-		// 1. Rate Limit Wait
-		// All workers compete for the tick. This ensures global rate limit.
-		<-w.limitTicker.C
+		// No internal wait here. 
+		// The rate limiting happens inside w.qs.Ask() or w.processLove()
 
 		ctx := context.Background()
 		// 2. Dequeue
@@ -136,6 +133,11 @@ func (w *Worker) processLove(ctx context.Context, payload *queue.TaskPayload) (i
 
 	// 1. Generate Hexagram
 	divResult := divination.Generate(req.Story)
+
+	// Rate Limit Wait
+	if err := w.limiter.Wait(ctx); err != nil {
+		return nil, err
+	}
 
 	// 2. Call LLM
 	llmReq := llm.LoveRequest{

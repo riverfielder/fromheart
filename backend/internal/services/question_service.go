@@ -12,6 +12,7 @@ import (
 	"fromheart/internal/db"
 	"fromheart/internal/divination"
 	"fromheart/internal/postprocess"
+	"fromheart/internal/ratelimit"
 
 	"github.com/pgvector/pgvector-go"
 	"github.com/redis/go-redis/v9"
@@ -25,10 +26,11 @@ type QuestionService struct {
 	redis       *redis.Client
 	llm         llm.Client
 	adminSecret string
+	limiter     *ratelimit.GlobalLimiter // Added
 }
 
-func NewQuestionService(postgres *gorm.DB, redis *redis.Client, llmClient llm.Client, adminSecret string) *QuestionService {
-	return &QuestionService{postgres: postgres, redis: redis, llm: llmClient, adminSecret: adminSecret}
+func NewQuestionService(postgres *gorm.DB, redis *redis.Client, llmClient llm.Client, adminSecret string, limiter *ratelimit.GlobalLimiter) *QuestionService {
+	return &QuestionService{postgres: postgres, redis: redis, llm: llmClient, adminSecret: adminSecret, limiter: limiter}
 }
 
 type AskRequest struct {
@@ -137,6 +139,11 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 				Zodiac:       u.Zodiac,
 			}
 		}
+	}
+
+	// Rate Limit Wait before calling LLM
+	if err := s.limiter.Wait(ctx); err != nil {
+		return AskResponse{}, err
 	}
 
 	raw, err := s.llm.GenerateAnswer(ctx, llm.GenerateRequest{
@@ -355,6 +362,11 @@ func (s *QuestionService) Chat(ctx context.Context, divinationID uint, message s
 		"content": message,
 	})
 
+	// Rate Limit Wait
+	if err := s.limiter.Wait(ctx); err != nil {
+		return "", err
+	}
+
 	// 3. Call LLM
 	return s.llm.Chat(ctx, messages)
 }
@@ -399,6 +411,11 @@ func (s *QuestionService) ChatStream(ctx context.Context, divinationID uint, mes
 		"role":    "user",
 		"content": message,
 	})
+
+	// Rate Limit Wait
+	if err := s.limiter.Wait(ctx); err != nil {
+		return err
+	}
 
 	// 3. Call LLM
 	return s.llm.ChatStream(ctx, messages, onToken)
@@ -548,6 +565,11 @@ func (s *QuestionService) ChatLove(ctx context.Context, id uint, message string,
 		"content": message,
 	})
 
+	// Rate Limit Wait
+	if err := s.limiter.Wait(ctx); err != nil {
+		return "", err
+	}
+
 	// 4. Call LLM (Chat)
 	return s.llm.Chat(ctx, llmMessages)
 }
@@ -596,6 +618,11 @@ func (s *QuestionService) ChatLoveStream(ctx context.Context, id uint, message s
 		"role":    "user",
 		"content": message,
 	})
+
+	// Rate Limit Wait
+	if err := s.limiter.Wait(ctx); err != nil {
+		return err
+	}
 
 	// 3. Call LLM (Stream)
 	return s.llm.ChatStream(ctx, llmMessages, onToken)

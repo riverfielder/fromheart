@@ -12,6 +12,7 @@ import (
 	"fromheart/internal/db"
 	"fromheart/internal/handlers"
 	"fromheart/internal/queue"
+	"fromheart/internal/ratelimit"
 	"fromheart/internal/routes"
 	"fromheart/internal/services"
 	"fromheart/internal/worker"
@@ -24,13 +25,16 @@ func main() {
 	postgres := db.NewPostgres(cfg)
 	redisClient := cache.NewRedis(cfg)
 
+	// Rate Limiter: 3 QPS
+	globalLimiter := ratelimit.NewGlobalLimiter(3)
+
 	llmClient := llm.NewWenxinClient(cfg)
-	questionService := services.NewQuestionService(postgres, redisClient, llmClient, cfg.AdminSecret)
+	questionService := services.NewQuestionService(postgres, redisClient, llmClient, cfg.AdminSecret, globalLimiter)
 
 	// Async Queue & Worker
 	queueClient := queue.NewQueue(redisClient)
-	aiWorker := worker.NewWorker(queueClient, questionService, postgres, llmClient)
-	go aiWorker.Start(30) // Start 30 concurrent workers (Rate limited to 3 QPS internally)
+	aiWorker := worker.NewWorker(queueClient, questionService, postgres, llmClient, globalLimiter)
+	go aiWorker.Start(30) // Start 30 concurrent workers
 
 	questionHandler := handlers.NewQuestionHandler(questionService, queueClient)
 	authHandler := handlers.NewAuthHandler(postgres, cfg)
