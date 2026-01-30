@@ -239,6 +239,21 @@ export default function HomePage() {
 
           {/* Right Group */}
           <div className="flex gap-4 pointer-events-auto">
+             {/* Love Icon (Peach Blossom) */}
+             <Link href="/love" className="group w-10 block no-underline">
+                 <motion.div 
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 whileHover={{ scale: 1.1 }}
+                 className="flex flex-col items-center relative"
+                 >
+                     <div className="h-8 flex items-center justify-center">
+                         <span className="text-2xl filter drop-shadow-md opacity-90 leading-none">🌸</span>
+                     </div>
+                     <span className="text-[10px] text-stone-500 font-serif mt-1">桃花</span>
+                 </motion.div>
+             </Link>
+
             {/* Wish Tree Icon */}
             <Link href="/wishing-tree" className="group w-10 block no-underline">
                 <motion.div 

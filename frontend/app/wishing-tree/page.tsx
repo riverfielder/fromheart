@@ -77,6 +77,10 @@ function WishCard({ wish, style, onBless }: { wish: Wish; style: React.CSSProper
                         onClick={(e) => {
                             e.stopPropagation();
                             if(!blessed) {
+                                // Optimistically update correct count locally inside card, 
+                                // avoiding 'double count' visual if parent re-renders.
+                                // Actually, standard pattern: parent updates state, prop changes.
+                                // But to avoid jumping: we rely on parent update or ensure logic matches.
                                 onBless(wish.id);
                                 setBlessed(true);
                             }
@@ -84,7 +88,7 @@ function WishCard({ wish, style, onBless }: { wish: Wish; style: React.CSSProper
                         disabled={blessed}
                         className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${blessed ? 'bg-red-100 text-red-500' : 'bg-red-600 text-white hover:bg-red-700'}`}
                      >
-                       <span>🙏</span> {wish.blessing_count + (blessed ? 1 : 0)} 祈福
+                       <span>🙏</span> {wish.blessing_count} 祈福
                      </button>
                    </div>
                 </div>
@@ -181,12 +185,16 @@ export default function WishingTreePage() {
   };
 
   const handleBless = async (id: number) => {
+      // Optimistic Update immediately to prevent UI lag
+      setWishes(prev => prev.map(w => w.id === id ? {...w, blessing_count: w.blessing_count + 1} : w));
+      
       try {
           await blessWish(id);
-          // Optimistic update locally? Or just reload. 
-           setWishes(prev => prev.map(w => w.id === id ? {...w, blessing_count: w.blessing_count + 1} : w));
+          // Allow background sync to eventually be consistent, but don't force reload to avoid jumping
       } catch (e) {
-          console.error(e);
+         console.error(e);
+         // Revert on error
+         setWishes(prev => prev.map(w => w.id === id ? {...w, blessing_count: w.blessing_count - 1} : w));
       }
   };
 
