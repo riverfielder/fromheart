@@ -21,6 +21,7 @@ export default function LovePage() {
   
   const [story, setStory] = useState("");
   const [result, setResult] = useState<LoveProbeResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!nameA || !nameB || !story || !birthA || !birthB) return;
@@ -46,7 +47,8 @@ export default function LovePage() {
       setStep("result");
     } catch (e) {
       console.error(e);
-      alert("请求失败，请稍后重试");
+      setError("请求失败，请稍后重试");
+      setTimeout(() => setError(null), 3000);
       setStep("input");
     }
   };
@@ -64,6 +66,23 @@ export default function LovePage() {
           <h1 className="text-2xl tracking-widest text-[#d45d79] font-medium">桃花·问情</h1>
           <div className="w-10"/>
       </header>
+      
+      {/* Error Toast */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
+          >
+            <div className="bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-stone-200 flex flex-col items-center gap-2 ring-1 ring-stone-100 min-w-[160px]">
+               <span className="text-3xl opacity-80">🌸</span>
+               <span className="text-sm font-serif text-stone-600 tracking-widest font-medium">{error}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="relative z-10 container mx-auto px-4 pt-24 pb-12 max-w-lg min-h-screen flex flex-col">
         
