@@ -138,9 +138,12 @@ export default function ShareModal({ show, onClose, result, poem }: ShareModalPr
           >
             {/* The Visible Card (Responsive) */}
             <div 
-              className="w-[300px] bg-[#FAFAFA] rounded-none px-5 py-6 flex flex-col items-center space-y-4 shadow-2xl relative overflow-hidden min-h-[480px]"
-              style={{ fontFamily: "'Noto Serif SC', serif" }}
+              className="w-[300px] max-h-[60vh] overflow-y-auto bg-[#FAFAFA] rounded-none px-5 pt-4 pb-6 flex flex-col items-center space-y-4 shadow-2xl relative"
+              style={{ fontFamily: "'Noto Serif SC', serif", scrollbarWidth: "none" }}
             >
+               <style jsx>{`
+                 div::-webkit-scrollbar { display: none; }
+               `}</style>
                <ShareCardContent result={result} poem={poem} />
             </div>
 

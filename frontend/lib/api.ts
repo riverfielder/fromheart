@@ -69,6 +69,21 @@ export async function getMe() {
     return data.user;
 }
 
+type Divination = {
+  ID: number;
+  BenGua: string;
+  BianGua: string;
+  CreatedAt: string;
+};
+
+export type HistoryItem = {
+    id: number;
+    type: 'divination' | 'love';
+    title: string;
+    date: string; // ISO
+    summary: string;
+}
+
 export async function askQuestion(question: string, deviceHash: string, secret?: string) {
   const res = await fetch(`${API_BASE}/api/question`, {
     ...fetchOptions,
@@ -85,7 +100,7 @@ export async function askQuestion(question: string, deviceHash: string, secret?:
   return res.json();
 }
 
-export async function getHistory(deviceHash: string) {
+export async function getHistory(deviceHash: string): Promise<{ items: HistoryItem[] }> {
   const res = await fetch(`${API_BASE}/api/history?device_hash=${deviceHash}`, { ...fetchOptions, headers: getHeaders() });
   if (!res.ok) {
     throw new Error("request failed");
@@ -93,8 +108,25 @@ export async function getHistory(deviceHash: string) {
   return res.json();
 }
 
-export async function getDivination(id: number) {
-  const res = await fetch(`${API_BASE}/api/divination/${id}`, { ...fetchOptions, headers: getHeaders() });
+export async function getLoveDetail(id: number, deviceHash: string) {
+    const res = await fetch(`${API_BASE}/api/love/${id}?device_hash=${deviceHash}`, { ...fetchOptions, headers: getHeaders() });
+    if (!res.ok) throw new Error("Fetch failed");
+    return res.json(); 
+}
+
+export async function chatLove(id: number, message: string, history: {role: string, content: string}[]) {
+    const res = await fetch(`${API_BASE}/api/love/${id}/chat`, {
+        ...fetchOptions,
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ message, history })
+    });
+    if (!res.ok) throw new Error("Chat failed");
+    return res.json();
+}
+
+export async function getDivination(id: number, deviceHash: string) {
+  const res = await fetch(`${API_BASE}/api/divination/${id}?device_hash=${deviceHash}`, { ...fetchOptions, headers: getHeaders() });
   if (!res.ok) {
     throw new Error("request failed");
   }

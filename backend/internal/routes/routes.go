@@ -61,6 +61,8 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		// Love Probe
 		api.POST("/love", loveHandler.Submit)
 		api.GET("/love/history", loveHandler.GetHistory)
+		api.GET("/love/:id", loveHandler.GetDetail)
+		api.POST("/love/:id/chat", loveHandler.Chat)
 
 		// Admin
 		api.GET("/admin/questions", handler.AdminAllHistory)

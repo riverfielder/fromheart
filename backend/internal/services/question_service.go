@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -356,4 +357,152 @@ func (s *QuestionService) Chat(ctx context.Context, divinationID uint, message s
 
 	// 3. Call LLM
 	return s.llm.Chat(ctx, messages)
+}
+
+type UnifiedHistoryItem struct {
+	ID        uint      `json:"id"`
+	Type      string    `json:"type"` // "divination" or "love"
+	Title     string    `json:"title"`
+	Date      time.Time `json:"date"`
+	Summary   string    `json:"summary"` // BenGua -> BianGua OR "Score: 90"
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (s *QuestionService) GetUnifiedHistory(ctx context.Context, deviceHash string, userID *uint, limit int) ([]UnifiedHistoryItem, error) {
+	var items []UnifiedHistoryItem
+
+	// 1. Fetch Daily Questions (Limit)
+	var dqs []db.DailyQuestion
+	dqQuery := s.postgres.Preload("Divination")
+	if userID != nil {
+		dqQuery = dqQuery.Where("user_id = ?", *userID)
+	} else {
+		dqQuery = dqQuery.Where("device_hash = ?", deviceHash)
+	}
+	if err := dqQuery.Order("created_at desc").Limit(limit).Find(&dqs).Error; err != nil {
+		return nil, err
+	}
+
+	for _, q := range dqs {
+		summary := "暂无卦象"
+		if q.Divination.ID != 0 {
+			summary = fmt.Sprintf("%s → %s", q.Divination.BenGua, q.Divination.BianGua)
+		}
+		items = append(items, UnifiedHistoryItem{
+			ID:        q.Divination.ID, // Use Divination ID for links
+			Type:      "divination",
+			Title:     q.QuestionText,
+			Date:      q.CreatedAt,
+			Summary:   summary,
+			CreatedAt: q.CreatedAt,
+		})
+	}
+
+	// 2. Fetch Love Probes (Limit)
+	var probes []db.LoveProbe
+	loveQuery := s.postgres.Model(&db.LoveProbe{})
+	// Love Probes currently don't have UserID, only DeviceHash
+	// So we can only fetch by DeviceHash for now.
+	// If the user system expands, we should add UserID to LoveProbe.
+	// For now, if userID is present, we might skip love probes or fetch by device hash associated with user?
+	// The prompt implies we are using device hash mostly for this anonymous/hybrid app.
+	// Let's use deviceHash.
+	if err := loveQuery.Where("device_hash = ?", deviceHash).Order("created_at desc").Limit(limit).Find(&probes).Error; err != nil {
+		return nil, err
+	}
+
+	for _, p := range probes {
+		// Parse score from FinalResponse JSON if possible, else "姻缘推演"
+		// Simple string manipulation to be fast, or unmarshal.
+		
+		title := fmt.Sprintf("%s & %s", p.NameA, p.NameB)
+		items = append(items, UnifiedHistoryItem{
+			ID:        p.ID,
+			Type:      "love",
+			Title:     title,
+			Date:      p.CreatedAt,
+			Summary:   fmt.Sprintf("卦象: %s", p.BenGua),
+			CreatedAt: p.CreatedAt,
+		})
+	}
+
+	// 3. Sort Combined List (Newest First)
+	// Simple bubble/insertion sort or slice sort since list is small (2*Limit)
+	// Or just append and use sort.Slice
+	// But first, let's keep it simple.
+    // ...
+    // Since we can't import "sort" easily inside the function block without re-imports if not present,
+    // let's rely on the user adding Imports.
+    // Actually, I should use insert with sort capability.
+    
+	// 3. Sort Combined List (Newest First)
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].CreatedAt.After(items[j].CreatedAt)
+	})
+
+	return items, nil
+}
+
+func (s *QuestionService) GetLoveProbe(ctx context.Context, id uint) (*db.LoveProbe, error) {
+	var probe db.LoveProbe
+	if err := s.postgres.First(&probe, id).Error; err != nil {
+		return nil, err
+	}
+	return &probe, nil
+}
+
+func (s *QuestionService) ChatLove(ctx context.Context, id uint, message string, history []ChatMessage) (string, error) {
+	// 1. Get Love Probe Context
+	probe, err := s.GetLoveProbe(ctx, id)
+	if err != nil {
+		return "", err
+	}
+
+	// 3. Construct System Prompt & Messages
+	contextPrompt := fmt.Sprintf(`
+你正在与用户谈论他们的姻缘。
+背景信息：
+甲方：%s (%s, %s)
+乙方：%s (%s, %s)
+故事：%s
+
+卦象：%s -> %s
+变爻：%s
+
+之前的分析结果：%s
+
+用户现在有新的追问。请基于以上八字和卦象背景进行解答。
+`,
+		probe.NameA, probe.GenderA, probe.BirthDateA,
+		probe.NameB, probe.GenderB, probe.BirthDateB,
+		probe.Story,
+		probe.BenGua, probe.BianGua, probe.ChangingLines,
+		probe.FinalResponse,
+	)
+
+    // Build the messages list for the LLM
+    var llmMessages []map[string]string
+
+    // System instruction as first message
+    llmMessages = append(llmMessages, map[string]string{
+        "role":    "system",
+        "content": contextPrompt,
+    })
+
+    // Add chat history
+    for _, msg := range history {
+        llmMessages = append(llmMessages, map[string]string{
+            "role":    msg.Role,
+            "content": msg.Content,
+        })
+    }
+
+    // Add current user message
+    llmMessages = append(llmMessages, map[string]string{
+        "role":    "user",
+        "content": message,
+    })
+
+	// 4. Call LLM (Chat)
+	return s.llm.Chat(ctx, llmMessages)
 }

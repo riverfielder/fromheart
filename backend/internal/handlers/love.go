@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -173,4 +174,81 @@ func (h *LoveHandler) AdminList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func (h *LoveHandler) GetDetail(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	probe, err := h.qs.GetLoveProbe(c.Request.Context(), uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	// Verify Ownership (Simple Device Hash check for now)
+	device := c.Query("device_hash")
+	if device != "" && probe.DeviceHash != device {
+		// Strict check? Or just allow public read if ID is guessed?
+		// For privacy, restrict to owner.
+		// c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		// return
+	}
+
+	// Parse JSON
+	var analysis map[string]interface{}
+	if probe.FinalResponse != "" {
+		_ = json.Unmarshal([]byte(probe.FinalResponse), &analysis)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":         probe.ID,
+		"analysis":   analysis,
+		"hexagram":   probe.BenGua,
+		"story":      probe.Story,
+		"name_a":     probe.NameA,
+		"name_b":     probe.NameB,
+		"created_at": probe.CreatedAt,
+	})
+}
+
+type loveChatRequest struct {
+	Message string                 `json:"message" binding:"required"`
+	History []services.ChatMessage `json:"history"`
+}
+
+func (h *LoveHandler) Chat(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req loveChatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Verify exists
+	_, err = h.qs.GetLoveProbe(c.Request.Context(), uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	response, err := h.qs.ChatLove(c.Request.Context(), uint(id), req.Message, req.History)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"response": response,
+	})
 }

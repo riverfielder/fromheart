@@ -138,7 +138,7 @@ func (h *QuestionHandler) History(c *gin.Context) {
 		return
 	}
 
-	history, err := h.service.History(c.Request.Context(), deviceHash, userID, 50)
+	history, err := h.service.GetUnifiedHistory(c.Request.Context(), deviceHash, userID, 50)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

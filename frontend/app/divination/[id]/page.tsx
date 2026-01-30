@@ -49,7 +49,10 @@ export default function DivinationDetailPage() {
     
     const id = Number(params?.id);
     if (!id) return;
-    getDivination(id)
+    
+    const token = window.localStorage.getItem("fh_device") || "anonymous";
+
+    getDivination(id, token)
       .then((res) => {
         setData(res);
         if (res.RawOutput) {

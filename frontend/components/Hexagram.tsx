@@ -59,15 +59,15 @@ export default function Hexagram({ name, size = "md" }: { name: string, size?: "
     const gap = size === "sm" ? "gap-[2px]" : size === "md" ? "gap-1" : "gap-1.5";
 
     return (
-        <div className={`flex flex-col ${gap} ${w} bg-white/50 p-1 rounded`}>
+        <div className={`flex flex-col ${gap} ${w} bg-white/50 p-1 rounded flex-shrink-0`}>
             {lines.map((isYang, i) => (
-                <div key={i} className={`${h} w-full flex justify-between`}>
+                <div key={i} className={`${h} w-full flex justify-between items-center`}>
                     {isYang === 1 ? (
-                        <div className="w-full bg-stone-800 rounded-sm"></div>
+                        <div className="w-full h-full bg-stone-800 rounded-sm flex-shrink-0"></div>
                     ) : (
                          <>
-                            <div className="w-[42%] bg-stone-800 rounded-sm"></div>
-                            <div className="w-[42%] bg-stone-800 rounded-sm"></div>
+                            <div className="w-[40%] h-full bg-stone-800 rounded-sm flex-shrink-0"></div>
+                            <div className="w-[40%] h-full bg-stone-800 rounded-sm flex-shrink-0"></div>
                          </>
                     )}
                 </div>
