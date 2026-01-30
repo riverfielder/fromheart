@@ -38,7 +38,7 @@ export default function DonationModal({ show, onClose, blessing }: DonationModal
               </p>
             ) : (
               <p className="text-gray-400 text-sm animate-pulse">
-                祈福中...
+                送诗一句...
               </p>
             )}
 

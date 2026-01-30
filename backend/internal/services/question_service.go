@@ -69,7 +69,7 @@ func (s *QuestionService) Ask(ctx context.Context, req AskRequest) (AskResponse,
 		// Search similar
 		var similar []db.DailyQuestion
 		query := s.postgres.Preload("Divination").Where("embedding IS NOT NULL")
-		
+
 		// PRIVACY FIX: Only search within the user's OWN history.
 		// We must not leak other users' questions into the context of another user.
 		if req.UserID != nil {
@@ -414,7 +414,7 @@ func (s *QuestionService) GetUnifiedHistory(ctx context.Context, deviceHash stri
 	for _, p := range probes {
 		// Parse score from FinalResponse JSON if possible, else "姻缘推演"
 		// Simple string manipulation to be fast, or unmarshal.
-		
+
 		title := fmt.Sprintf("%s & %s", p.NameA, p.NameB)
 		items = append(items, UnifiedHistoryItem{
 			ID:        p.ID,
@@ -430,11 +430,11 @@ func (s *QuestionService) GetUnifiedHistory(ctx context.Context, deviceHash stri
 	// Simple bubble/insertion sort or slice sort since list is small (2*Limit)
 	// Or just append and use sort.Slice
 	// But first, let's keep it simple.
-    // ...
-    // Since we can't import "sort" easily inside the function block without re-imports if not present,
-    // let's rely on the user adding Imports.
-    // Actually, I should use insert with sort capability.
-    
+	// ...
+	// Since we can't import "sort" easily inside the function block without re-imports if not present,
+	// let's rely on the user adding Imports.
+	// Actually, I should use insert with sort capability.
+
 	// 3. Sort Combined List (Newest First)
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].CreatedAt.After(items[j].CreatedAt)
@@ -480,28 +480,28 @@ func (s *QuestionService) ChatLove(ctx context.Context, id uint, message string,
 		probe.FinalResponse,
 	)
 
-    // Build the messages list for the LLM
-    var llmMessages []map[string]string
+	// Build the messages list for the LLM
+	var llmMessages []map[string]string
 
-    // System instruction as first message
-    llmMessages = append(llmMessages, map[string]string{
-        "role":    "system",
-        "content": contextPrompt,
-    })
+	// System instruction as first message
+	llmMessages = append(llmMessages, map[string]string{
+		"role":    "system",
+		"content": contextPrompt,
+	})
 
-    // Add chat history
-    for _, msg := range history {
-        llmMessages = append(llmMessages, map[string]string{
-            "role":    msg.Role,
-            "content": msg.Content,
-        })
-    }
+	// Add chat history
+	for _, msg := range history {
+		llmMessages = append(llmMessages, map[string]string{
+			"role":    msg.Role,
+			"content": msg.Content,
+		})
+	}
 
-    // Add current user message
-    llmMessages = append(llmMessages, map[string]string{
-        "role":    "user",
-        "content": message,
-    })
+	// Add current user message
+	llmMessages = append(llmMessages, map[string]string{
+		"role":    "user",
+		"content": message,
+	})
 
 	// 4. Call LLM (Chat)
 	return s.llm.Chat(ctx, llmMessages)

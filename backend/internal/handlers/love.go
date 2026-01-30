@@ -284,17 +284,17 @@ func (h *LoveHandler) ChatStream(c *gin.Context) {
 	c.Stream(func(w io.Writer) bool {
 		err := h.qs.ChatLoveStream(c.Request.Context(), uint(id), req.Message, req.History, func(token string) {
 			// Write SSE format: data: <token>\n\n
-			// But we need to be careful about newlines in token. 
-			// Standard SSE sends "data: payload\n\n". 
+			// But we need to be careful about newlines in token.
+			// Standard SSE sends "data: payload\n\n".
 			// If payload has newlines, it's usually valid in data.
 			// Let's use JSON encoding for the data payload to be safe.
-			
+
 			// Actually simpler: just write raw text? No, client expects something.
 			// Let's assume client reads raw text stream (not SSE) or full SSE.
 			// Standard is SSE.
 			// We can send JSON chunks.
 			// data: {"content": "..."}
-			
+
 			// Let's wrap in JSON
 			chunk, _ := json.Marshal(gin.H{"content": token})
 			fmt.Fprintf(w, "data: %s\n\n", chunk)

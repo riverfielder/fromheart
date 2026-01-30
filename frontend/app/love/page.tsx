@@ -59,11 +59,12 @@ export default function LovePage() {
       <div className="absolute top-0 right-0 w-64 h-64 bg-pink-200/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-red-100/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
       
-      <header className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
-          <Link href="/" className="text-stone-500 hover:text-stone-800 transition-colors">
-             ← 返回
+      <header className="absolute top-0 w-full p-6 flex justify-between items-center z-30 pointer-events-none">
+          <Link href="/" className="pointer-events-auto bg-white/60 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-stone-200/50 text-stone-600 hover:bg-white/90 hover:scale-105 active:scale-95 transition-all flex items-center gap-1 text-sm font-serif">
+             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+             <span className="pr-1">返回</span>
           </Link>
-          <h1 className="text-2xl tracking-widest text-[#d45d79] font-medium">桃花·问情</h1>
+          <h1 className="text-2xl tracking-widest text-[#d45d79] font-medium pointer-events-auto">桃花·问情</h1>
           <div className="w-10"/>
       </header>
       

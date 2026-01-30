@@ -19,10 +19,11 @@ export default function HistoryPage() {
 
   return (
     <main className="space-y-6 pt-8 px-4 max-w-lg mx-auto min-h-screen pb-12">
-      <header className="flex justify-between items-baseline mb-6 border-b border-stone-200 pb-4">
+      <header className="flex justify-between items-center mb-6 border-b border-stone-200 pb-4">
         <h1 className="text-2xl font-serif text-stone-800 tracking-wider">历史记录</h1>
-        <Link href="/" className="text-sm text-stone-400 hover:text-stone-600">
-            ← 返回
+        <Link href="/" className="bg-white/60 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-stone-200/50 text-stone-600 hover:bg-white/90 hover:scale-105 active:scale-95 transition-all flex items-center gap-1 text-sm font-serif">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <span className="pr-1">返回</span>
         </Link>
       </header>
 

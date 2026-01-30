@@ -129,13 +129,13 @@ func (w *WenxinClient) GenerateBlessing(ctx context.Context) (string, error) {
 	}
 	// Similar simple prompt
 	payload := map[string]interface{}{
-			"model": w.model,
-			"messages": []map[string]string{
-					{
-							"role":    "user",
-							"content": "请生成一句简短的功德祝福语（不超过20字），风格庄重、慈悲、正能量。用于用户敲木鱼后增加功德。",
-					},
+		"model": w.model,
+		"messages": []map[string]string{
+			{
+				"role":    "user",
+				"content": "请生成一句简短的功德祝福语（不超过20字），风格庄重、慈悲、正能量。用于用户敲木鱼后增加功德。",
 			},
+		},
 	}
 	return w.doChat(ctx, payload)
 }
@@ -260,7 +260,7 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	// Assuming bge-large-zh or similar, or just a default embedding model path
 	// Wenxin embedding endpoint: /v2/embeddings
 	endpoint := w.baseURL + "/v2/embeddings"
-	
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -340,7 +340,7 @@ func (w *WenxinClient) ChatStream(ctx context.Context, history []map[string]stri
 			continue
 		}
 		data := strings.TrimPrefix(line, "data: ")
-		
+
 		// Baidu/OpenAI convention: data: [DONE]
 		if data == "[DONE]" {
 			break
@@ -353,7 +353,7 @@ func (w *WenxinClient) ChatStream(ctx context.Context, history []map[string]stri
 				} `json:"delta"`
 			} `json:"choices"`
 		}
-		
+
 		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
 			// Skip malformed chunks
 			continue

@@ -103,8 +103,9 @@ export default function LoveDetailPage() {
             <main className="container mx-auto px-4 max-w-lg space-y-6">
                  {/* Top Navigation & Names */}
                  <div className="flex justify-between items-center px-2">
-                    <Link href="/history" className="text-stone-400 hover:text-[#d45d79] transition-colors text-sm flex items-center gap-1">
-                        ← 返回列表
+                    <Link href="/history" className="bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-pink-100 text-stone-500 hover:text-[#d45d79] hover:bg-white hover:scale-105 active:scale-95 transition-all flex items-center gap-1 text-sm font-serif">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                        <span>返回列表</span>
                     </Link>
                     <h1 className="text-lg tracking-widest text-[#d45d79] font-medium font-serif">
                         {detail.name_a} <span className="text-stone-300 text-xs mx-1">&</span> {detail.name_b}

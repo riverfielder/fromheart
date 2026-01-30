@@ -205,11 +205,12 @@ export default function WishingTreePage() {
   return (
     <div className="min-h-screen bg-stone-100 relative overflow-hidden flex flex-col items-center">
         {/* Header */}
-        <header className="absolute top-0 w-full p-4 flex justify-between items-center z-20">
-            <Link href="/" className="text-stone-600 bg-white/50 backdrop-blur px-4 py-2 rounded-full shadow-sm text-sm font-medium">
-                ← 返回
+        <header className="absolute top-0 w-full p-4 flex justify-between items-center z-30 pointer-events-none">
+            <Link href="/" className="pointer-events-auto bg-white/60 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-stone-200/50 text-stone-600 hover:bg-white/90 hover:scale-105 active:scale-95 transition-all flex items-center gap-1 text-sm font-serif">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                <span className="pr-1">返回</span>
             </Link>
-            <h1 className="text-xl font-serif text-stone-800 tracking-widest">祈福树</h1>
+            <h1 className="text-xl font-serif text-stone-800 tracking-widest pointer-events-auto">祈福树</h1>
             <div className="w-16" />
         </header>
 
