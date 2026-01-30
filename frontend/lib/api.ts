@@ -84,21 +84,6 @@ export type HistoryItem = {
     summary: string;
 }
 
-export async function askQuestion(question: string, deviceHash: string, secret?: string) {
-  const res = await fetch(`${API_BASE}/api/question`, {
-    ...fetchOptions,
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify({ question, device_hash: deviceHash, secret }),
-  });
-  if (!res.ok) {
-    if (res.status === 403) {
-      throw new Error("daily_limit_reached");
-    }
-    throw new Error("request failed");
-  }
-  return res.json();
-}
 
 export async function getHistory(deviceHash: string): Promise<{ items: HistoryItem[] }> {
   const res = await fetch(`${API_BASE}/api/history?device_hash=${deviceHash}`, { ...fetchOptions, headers: getHeaders() });
@@ -172,6 +157,62 @@ export async function chatLoveStream(
                     }
                 } catch (e) {
                     // ignore
+                }
+            }
+        }
+    }
+}
+
+export async function chatStream(
+    id: number,
+    message: string,
+    history: {role: string, content: string}[],
+    onChunk: (text: string) => void
+) {
+    const res = await fetch(`${API_BASE}/api/divination/${id}/chat/stream`, {
+        ...fetchOptions,
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ message, history })
+    });
+
+    if (!res.ok) {
+        if (res.status === 403) {
+            const errorData = await res.json().catch(() => ({}));
+            if (errorData.error === "daily_chat_limit_reached") {
+                throw new Error("daily_chat_limit_reached");
+            }
+        }
+        if (res.status === 503) {
+            throw new Error("server_busy");
+        }
+        throw new Error("Chat failed");
+    }
+    if (!res.body) throw new Error("No body");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8"); // Force UTF-8
+
+    // The backend for streaming logic here should be consistent with chatLoveStream we updated
+    // which uses manual json chunks
+    
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n\n");
+        for (const line of lines) {
+            if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") return;
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.content) {
+                        onChunk(parsed.content);
+                    }
+                } catch (e) {
+                    // Ignore parsing errors for partial chunks
                 }
             }
         }
@@ -346,6 +387,41 @@ export interface LoveProbeResponse {
   hexagram: string;
 }
 
+// 异步任务相关
+export type TaskStatus = "pending" | "processing" | "completed" | "failed";
+
+export interface TaskResult<T = any> {
+    status: TaskStatus;
+    result?: T;
+    error?: string;
+}
+
+export async function getTaskStatus<T>(taskId: string) {
+    const res = await fetch(`${API_BASE}/api/task/${taskId}`, { headers: getHeaders() });
+    if (!res.ok) throw new Error("Check task failed");
+    return res.json() as Promise<TaskResult<T>>;
+}
+
+export async function pollTask<T>(taskId: string, interval = 1500, timeout = 120000): Promise<T> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeout) {
+        const data = await getTaskStatus<T>(taskId);
+        
+        if (data.status === "completed" && data.result) {
+            return data.result;
+        }
+        
+        if (data.status === "failed") {
+            throw new Error(data.error || "大师推演遇到了困难，请重试");
+        }
+        
+        // Wait
+        await new Promise(resolve => setTimeout(resolve, interval));
+    }
+    throw new Error("大师思考时间过长，请稍后在历史记录中查看");
+}
+
 export async function submitLoveProbe(req: Omit<LoveProbeRequest, 'device_hash'> & { deviceHash: string }) {
     const { deviceHash, ...rest } = req;
     const res = await fetch(`${API_BASE}/api/love`, {
@@ -357,61 +433,39 @@ export async function submitLoveProbe(req: Omit<LoveProbeRequest, 'device_hash'>
     if (!res.ok) {
         throw new Error("Failed to submit love probe");
     }
-    return res.json() as Promise<LoveProbeResponse>;
+    // 现在返回的是 { task_id: "...", message: "..." }
+    const data = await res.json();
+    if (data.task_id) {
+        // 开始轮询
+        return pollTask<LoveProbeResponse>(data.task_id);
+    }
+    // 兼容旧接口（如果后端回滚）
+    return data as LoveProbeResponse;
 }
 
-export async function chatStream(
-    id: number,
-    message: string,
-    history: {role: string, content: string}[],
-    onChunk: (text: string) => void
-) {
-    const res = await fetch(`${API_BASE}/api/divination/${id}/chat/stream`, {
-        ...fetchOptions,
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ message, history })
-    });
-
-    if (!res.ok) {
-        if (res.status === 403) {
-            const errorData = await res.json().catch(() => ({}));
-            if (errorData.error === "daily_chat_limit_reached") {
-                throw new Error("daily_chat_limit_reached");
-            }
-        }
-        if (res.status === 503) {
-            throw new Error("server_busy");
-        }
-        throw new Error("Chat failed");
+export async function askQuestion(question: string, deviceHash: string, secret?: string) {
+  const res = await fetch(`${API_BASE}/api/question`, {
+    ...fetchOptions,
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ question, device_hash: deviceHash, secret }),
+  });
+  if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error("daily_limit_reached");
     }
-    if (!res.body) throw new Error("No body");
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder("utf-8"); // Force UTF-8
-
-    // The backend for streaming logic here should be consistent with chatLoveStream we updated
-    // which uses manual json chunks
-    
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n\n");
-        for (const line of lines) {
-            if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") return;
-                try {
-                    const parsed = JSON.parse(data);
-                    if (parsed.content) {
-                        onChunk(parsed.content);
-                    }
-                } catch (e) {
-                    // Ignore parsing errors for partial chunks
-                }
-            }
-        }
+    if (res.status === 503) {
+        throw new Error("server_busy");
     }
+    throw new Error("request failed");
+  }
+  
+  const data = await res.json();
+  if (data.task_id) {
+      // 轮询结果
+      // 结果结构: { divination_id: number, result: Output }
+      // 注意：后端 Worker processQuestion 返回的就是这个结构
+      return pollTask<any>(data.task_id); 
+  }
+  return data;
 }

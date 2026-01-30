@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
-	"time"
 
 	"fromheart/internal/adapters/llm"
 	"fromheart/internal/db"
-	"fromheart/internal/divination"
+	"fromheart/internal/queue"
 	"fromheart/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,11 +20,12 @@ type LoveHandler struct {
 	db          *gorm.DB
 	llm         llm.Client
 	qs          *services.QuestionService
+	q           *queue.Queue
 	adminSecret string
 }
 
-func NewLoveHandler(db *gorm.DB, llm llm.Client, qs *services.QuestionService, adminSecret string) *LoveHandler {
-	return &LoveHandler{db: db, llm: llm, qs: qs, adminSecret: adminSecret}
+func NewLoveHandler(db *gorm.DB, llm llm.Client, qs *services.QuestionService, q *queue.Queue, adminSecret string) *LoveHandler {
+	return &LoveHandler{db: db, llm: llm, qs: qs, q: q, adminSecret: adminSecret}
 }
 
 type LoveSubmission struct {
@@ -49,89 +49,27 @@ func (h *LoveHandler) Submit(c *gin.Context) {
 		req.DeviceHash = "anonymous"
 	}
 
-	// 1. Generate Hexagram based on Story
-	// Use story string as seed source by summing char codes or similar hash
-	// Or just use divination engine's default random, but user feels "sincere" if it's based on input.
-	// Actually, divination.Generate takes a question string and uses it to seed if deterministic mode was on,
-	// but currently it uses crypto/rand. Let's stick to standard divination.Generate(req.Story).
-	divResult := divination.Generate(req.Story)
+	// Async Enqueue
+	taskID := uuid.New().String()
+	payloadData, _ := json.Marshal(req)
 
-	// 2. Call LLM for Analysis
-	llmReq := llm.LoveRequest{
-		NameA: req.NameA, GenderA: req.GenderA, BirthA: req.BirthDateA,
-		NameB: req.NameB, GenderB: req.GenderB, BirthB: req.BirthDateB,
-		Story:         req.Story,
-		BenGua:        divResult.BenGua,
-		BianGua:       divResult.BianGua,
-		ChangingLines: divResult.ChangingLines,
+	taskPayload := queue.TaskPayload{
+		Type:       queue.TypeLove,
+		Data:       payloadData,
+		DeviceHash: req.DeviceHash,
 	}
 
-	rawAnalysis, err := h.llm.AnalyzeLove(c.Request.Context(), llmReq)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "AI analysis failed"})
+	if err := h.q.Enqueue(c.Request.Context(), taskID, taskPayload); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue task"})
 		return
 	}
 
-	// Trim Markdown if present and find JSON object
-	cleanJSON := extractJSON(rawAnalysis)
-
-	// 3. Save to DB
-	// Try parsing first to ensure validity, if fail, create fallback
-	var finalObj map[string]interface{}
-	if err := json.Unmarshal([]byte(cleanJSON), &finalObj); err != nil {
-		fmt.Printf("JSON Unmarshal Error: %v\nRaw: %s\n", err, rawAnalysis)
-		// Fallback: Construct a valid object using the raw text
-		finalObj = map[string]interface{}{
-			"score":                0, // 0 indicates exception
-			"keyword":              "天机难测",
-			"bazi_analysis":        "服务器解析数据时遭遇格式异常，请参考：\n\n" + rawAnalysis,
-			"hexagram_analysis":    "（见上文）",
-			"story_interpretation": "（格式解析异常）",
-			"advice":               []string{"建议稍后重试", "或直接参考上述文本"},
-			"poem":                 "道可道非常道",
-		}
-		// Update cleanJSON to the fallback valid JSON
-		fallbackBytes, _ := json.Marshal(finalObj)
-		cleanJSON = string(fallbackBytes)
-	}
-
-	probe := db.LoveProbe{
-		DeviceHash:    req.DeviceHash,
-		NameA:         req.NameA,
-		GenderA:       req.GenderA,
-		BirthDateA:    req.BirthDateA,
-		NameB:         req.NameB,
-		GenderB:       req.GenderB,
-		BirthDateB:    req.BirthDateB,
-		Story:         req.Story,
-		BenGua:        divResult.BenGua,
-		BianGua:       divResult.BianGua,
-		ChangingLines: divResult.ChangingLines,
-		RawOutput:     rawAnalysis,
-		FinalResponse: cleanJSON,
-		CreatedAt:     time.Now(),
-	}
-
-	if err := h.db.Create(&probe).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save record"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"id":       probe.ID,
-		"analysis": finalObj,
-		"hexagram": divResult.BenGua, // Simplified return
+	c.JSON(http.StatusAccepted, gin.H{
+		"task_id": taskID,
+		"message": "姻缘推演请求已受理，请稍候...",
 	})
 }
 
-func extractJSON(s string) string {
-	start := strings.Index(s, "{")
-	end := strings.LastIndex(s, "}")
-	if start == -1 || end == -1 || start >= end {
-		return s
-	}
-	return s[start : end+1]
-}
 
 func (h *LoveHandler) GetHistory(c *gin.Context) {
 	hash := c.Query("device_hash")

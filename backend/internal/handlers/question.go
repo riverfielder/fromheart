@@ -6,17 +6,20 @@ import (
 	"net/http"
 	"strconv"
 
+	"fromheart/internal/queue"
 	"fromheart/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type QuestionHandler struct {
 	service *services.QuestionService
+	q       *queue.Queue
 }
 
-func NewQuestionHandler(service *services.QuestionService) *QuestionHandler {
-	return &QuestionHandler{service: service}
+func NewQuestionHandler(service *services.QuestionService, q *queue.Queue) *QuestionHandler {
+	return &QuestionHandler{service: service, q: q}
 }
 
 type askRequest struct {
@@ -41,28 +44,39 @@ func (h *QuestionHandler) Ask(c *gin.Context) {
 		userID = &id
 	}
 
-	resp, err := h.service.Ask(c.Request.Context(), services.AskRequest{
-		Question:   req.Question,
-		DeviceHash: req.DeviceHash,
-		Secret:     req.Secret,
-		UserID:     userID,
-	})
-	if err != nil {
-		if err == services.ErrDailyLimitReached {
+	// 1. Pre-check Limit (Synchronous)
+	if req.Secret != "loveriver" {
+		count, err := h.service.GetTodayQuestionCount(c.Request.Context(), req.DeviceHash, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "limit check failed"})
+			return
+		}
+		if count >= 10 {
 			c.JSON(http.StatusForbidden, gin.H{"error": "daily_limit_reached", "message": "不可贪念天机"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	// 2. Enqueue Task (Asynchronous)
+	taskID := uuid.New().String()
+	payloadData, _ := json.Marshal(req) // We can reuse askRequest as payload data
+	
+	taskPayload := queue.TaskPayload{
+		Type:       queue.TypeQuestion,
+		Data:       payloadData,
+		UserID:     userID,
+		DeviceHash: req.DeviceHash,
+	}
+
+	if err := h.q.Enqueue(c.Request.Context(), taskID, taskPayload); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue task"})
 		return
 	}
 
-	// Fetch updated count to return to frontend
-	count, _ := h.service.GetTodayQuestionCount(c.Request.Context(), req.DeviceHash, userID)
-
-	c.JSON(http.StatusOK, gin.H{
-		"divination_id": resp.DivinationID,
-		"result":        resp.Output,
-		"usage_count":   count,
+	// Return Task ID immediately
+	c.JSON(http.StatusAccepted, gin.H{
+		"task_id": taskID,
+		"message": "请求已受理，正在推演中...",
 	})
 }
 

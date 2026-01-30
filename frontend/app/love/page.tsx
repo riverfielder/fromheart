@@ -23,6 +23,27 @@ export default function LovePage() {
   const [result, setResult] = useState<LoveProbeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [loadingText, setLoadingText] = useState("正在推演八字与卦象...");
+
+  useEffect(() => {
+      if (step === "loading") {
+          const msgs = [
+              "正在推演八字与卦象...",
+              "红线牵引，静候佳音...",
+              "缘分天定，解析中...",
+              "大师正在排盘...",
+              "情深意重，稍安勿躁..."
+          ];
+          let i = 0;
+          setLoadingText(msgs[0]);
+          const timer = setInterval(() => {
+              i = (i + 1) % msgs.length;
+              setLoadingText(msgs[i]);
+          }, 3000);
+          return () => clearInterval(timer);
+      }
+  }, [step]);
+
   const handleSubmit = async () => {
     if (!nameA || !genderA || !nameB || !genderB || !story || !birthA || !birthB) return;
     
@@ -242,8 +263,8 @@ export default function LovePage() {
                      </motion.div>
                 </div>
                 
-                <p className="text-[#d45d79] text-lg animate-pulse">
-                    正在推演八字与卦象...
+                <p className="text-[#d45d79] text-lg animate-pulse min-h-[1.75rem] text-center">
+                    {loadingText}
                 </p>
                 <p className="text-stone-400 text-sm">
                     缘分天注定，事在人为

@@ -4,6 +4,16 @@ import React, { useState, useEffect } from "react";
 export default function WoodenFish() {
   const [merit, setMerit] = useState(0);
   const [clicks, setClicks] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [statusText, setStatusText] = useState(LOADING_TEXTS[0]);
+
+  useEffect(() => {
+      let i = 0;
+      const timer = setInterval(() => {
+          i = (i + 1) % LOADING_TEXTS.length;
+          setStatusText(LOADING_TEXTS[i]);
+      }, 3000);
+      return () => clearInterval(timer);
+  }, []);
 
   // Sound effect (optional, maybe distinct 'tock' sound if we had files, skipping for now to keep it simple/silent or user browser api)
   // We will just do visual feedback.
@@ -81,8 +91,8 @@ export default function WoodenFish() {
         </motion.div>
       </div>
 
-      <p className="text-xs text-stone-500 font-serif tracking-widest animate-pulse">
-        推演中... 点击木鱼积攒功德
+      <p className="text-xs text-stone-500 font-serif tracking-widest animate-pulse min-h-[1.5em] text-center">
+        {statusText}
       </p>
       
       <div className="text-[10px] text-stone-400 font-mono">
@@ -91,3 +101,11 @@ export default function WoodenFish() {
     </div>
   );
 }
+
+const LOADING_TEXTS = [
+    "推演中... 点击木鱼积攒功德",
+    "正在排队请教大师...",
+    "天机浩渺，请耐心等待...",
+    "心诚则灵，稍安勿躁...",
+    "正在解析卦象...",
+];

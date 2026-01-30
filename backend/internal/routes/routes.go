@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHandler, wishHandler *handlers.WishHandler, loveHandler *handlers.LoveHandler, cfg config.Config, rdb *redis.Client) *gin.Engine {
+func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHandler, wishHandler *handlers.WishHandler, loveHandler *handlers.LoveHandler, taskHandler *handlers.TaskHandler, cfg config.Config, rdb *redis.Client) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.RateLimit(rdb))
 	r.Use(func(c *gin.Context) {
@@ -48,6 +48,9 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		// Me requires auth
 		api.GET("/me", middleware.RequireAuthMiddleware(), authHandler.Me)
 		api.PUT("/me", middleware.RequireAuthMiddleware(), authHandler.UpdateProfile)
+
+		// Async Task Status
+		api.GET("/task/:id", taskHandler.GetStatus)
 
 		api.POST("/question", handler.Ask)
 		api.GET("/divination/:id", handler.GetDivination)

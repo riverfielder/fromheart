@@ -11,8 +11,10 @@ import (
 	"fromheart/internal/config"
 	"fromheart/internal/db"
 	"fromheart/internal/handlers"
+	"fromheart/internal/queue"
 	"fromheart/internal/routes"
 	"fromheart/internal/services"
+	"fromheart/internal/worker"
 )
 
 func main() {
@@ -25,12 +27,18 @@ func main() {
 	llmClient := llm.NewWenxinClient(cfg)
 	questionService := services.NewQuestionService(postgres, redisClient, llmClient, cfg.AdminSecret)
 
-	questionHandler := handlers.NewQuestionHandler(questionService)
+	// Async Queue & Worker
+	queueClient := queue.NewQueue(redisClient)
+	aiWorker := worker.NewWorker(queueClient, questionService, postgres, llmClient)
+	go aiWorker.Start(10) // Start 10 concurrent workers
+
+	questionHandler := handlers.NewQuestionHandler(questionService, queueClient)
 	authHandler := handlers.NewAuthHandler(postgres, cfg)
 	wishHandler := handlers.NewWishHandler(postgres)
-	loveHandler := handlers.NewLoveHandler(postgres, llmClient, questionService, cfg.AdminSecret)
+	loveHandler := handlers.NewLoveHandler(postgres, llmClient, questionService, queueClient, cfg.AdminSecret)
+	taskHandler := handlers.NewTaskHandler(queueClient)
 
-	router := routes.NewRouter(questionHandler, authHandler, wishHandler, loveHandler, cfg, redisClient)
+	router := routes.NewRouter(questionHandler, authHandler, wishHandler, loveHandler, taskHandler, cfg, redisClient)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
