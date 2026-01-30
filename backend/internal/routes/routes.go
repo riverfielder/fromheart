@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHandler, wishHandler *handlers.WishHandler, cfg config.Config, rdb *redis.Client) *gin.Engine {
+func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHandler, wishHandler *handlers.WishHandler, loveHandler *handlers.LoveHandler, cfg config.Config, rdb *redis.Client) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.RateLimit(rdb))
 	r.Use(func(c *gin.Context) {
@@ -57,6 +57,10 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		api.GET("/wishes", wishHandler.ListWishes)
 		api.POST("/wishes", wishHandler.CreateWish)
 		api.POST("/wishes/:id/bless", wishHandler.BlessWish)
+
+		// Love Probe
+		api.POST("/love", loveHandler.Submit)
+		api.GET("/love/history", loveHandler.GetHistory)
 
 		api.GET("/admin/questions", handler.AdminAllHistory)
 		api.GET("/health", func(c *gin.Context) {

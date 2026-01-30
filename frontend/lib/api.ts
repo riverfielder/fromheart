@@ -219,3 +219,42 @@ export async function blessWish(id: number) {
   });
   if (!res.ok) throw new Error("Failed to bless wish");
 }
+
+export interface LoveProbeRequest {
+  device_hash: string;
+  name_a: string;
+  gender_a: string;
+  birth_date_a: string; // YYYY-MM-DD HH:mm
+  name_b: string;
+  gender_b: string;
+  birth_date_b: string;
+  story: string;
+}
+
+export interface LoveProbeResponse {
+  id: number;
+  analysis: {
+    score: number;
+    keyword: string;
+    bazi_analysis: string;
+    hexagram_analysis: string;
+    story_interpretation: string;
+    advice: string[];
+    poem: string;
+  };
+  hexagram: string;
+}
+
+export async function submitLoveProbe(req: Omit<LoveProbeRequest, 'device_hash'> & { deviceHash: string }) {
+    const { deviceHash, ...rest } = req;
+    const res = await fetch(`${API_BASE}/api/love`, {
+      ...fetchOptions,
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ device_hash: deviceHash, ...rest }),
+    });
+    if (!res.ok) {
+        throw new Error("Failed to submit love probe");
+    }
+    return res.json() as Promise<LoveProbeResponse>;
+}

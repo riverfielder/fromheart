@@ -93,45 +93,7 @@ direct_answer 风格必须晦涩高深、玄妙莫测，如古代签文般充满
 		},
 	}
 
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-
-	endpoint := w.baseURL + "/v2/chat/completions"
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+w.apiKey)
-
-	resp, err := w.httpClient.Do(request)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		var errBody map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errBody)
-		return "", fmt.Errorf("wenxin api error: status %d, body: %v", resp.StatusCode, errBody)
-	}
-
-	var parsed struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		return "", err
-	}
-	if len(parsed.Choices) == 0 {
-		return "", errors.New("empty choices")
-	}
-	return parsed.Choices[0].Message.Content, nil
+	return w.doChat(ctx, payload)
 }
 
 func (w *WenxinClient) GeneratePoem(ctx context.Context) (string, error) {
@@ -156,6 +118,57 @@ func (w *WenxinClient) GeneratePoem(ctx context.Context) (string, error) {
 		},
 	}
 
+	return w.doChat(ctx, payload)
+}
+
+func (w *WenxinClient) AnalyzeLove(ctx context.Context, req LoveRequest) (string, error) {
+	if w.apiKey == "" {
+		return "", errors.New("missing WENXIN_API_KEY")
+	}
+
+	sysPrompt := `你是一位精通八字命理（四柱）与梅花易数的合婚大师。
+你需要结合双方的八字（出生时间）和本卦卦象，给出深度的情感分析。
+
+分析步骤：
+1. **排盘**：根据提供的生辰，推演双方八字五行。分析日柱（夫妻宫）的刑冲合害关系。
+2. **解卦**：根据梅花易数解本卦（现状）与变卦（趋势）。
+3. **合参**：将命理基础与卦象趋势结合，判断缘分深浅与发展走向。
+
+输出格式必须为纯JSON，不要包含markdown标记：
+{
+  "score": 85,
+  "keyword": "天作之合/情深缘浅/...",
+  "bazi_analysis": "双方八字五行分析...",
+  "hexagram_analysis": "卦象分析...",
+  "story_interpretation": "结合用户故事的解读...",
+  "advice": ["建议1", "建议2"...],
+  "poem": "一首总结性的诗词"
+}`
+
+	userContent := fmt.Sprintf(`
+甲方：%s (%s, %s)
+乙方：%s (%s, %s)
+故事背景：%s
+
+所占卦象：
+本卦：%s
+变卦：%s
+动爻：%s
+`, req.NameA, req.GenderA, req.BirthA, req.NameB, req.GenderB, req.BirthB, req.Story, req.BenGua, req.BianGua, req.ChangingLines)
+
+	payload := map[string]interface{}{
+		"model": w.model,
+		"messages": []map[string]string{
+			{"role": "system", "content": sysPrompt},
+			{"role": "user", "content": userContent},
+		},
+		"temperature": 0.7, // Slightly creative
+	}
+
+	return w.doChat(ctx, payload)
+}
+
+func (w *WenxinClient) doChat(ctx context.Context, payload map[string]interface{}) (string, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return "", err

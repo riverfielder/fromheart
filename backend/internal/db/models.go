@@ -7,17 +7,17 @@ import (
 )
 
 type User struct {
-	ID           uint      `gorm:"primaryKey" json:"id"`
-	Username     string    `gorm:"uniqueIndex" json:"username"`
-	PasswordHash string    `json:"-"`
-	
+	ID           uint   `gorm:"primaryKey" json:"id"`
+	Username     string `gorm:"uniqueIndex" json:"username"`
+	PasswordHash string `json:"-"`
+
 	// Profile fields
-	BirthDateStr string    `json:"birth_date"`     // YYYY-MM-DD HH:mm
-	Gender       string    `json:"gender"`         // male/female/other
-	MBTI         string    `json:"mbti"`
-	Zodiac       string    `json:"zodiac"`
-	
-	CreatedAt    time.Time `json:"created_at"`
+	BirthDateStr string `json:"birth_date"` // YYYY-MM-DD HH:mm
+	Gender       string `json:"gender"`     // male/female/other
+	MBTI         string `json:"mbti"`
+	Zodiac       string `json:"zodiac"`
+
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type DailyQuestion struct {
@@ -51,4 +51,32 @@ type Wish struct {
 	BlessingCount int       `json:"blessing_count"`
 	Type          string    `gorm:"size:20" json:"type"` // e.g. health, wealth, love, study
 	CreatedAt     time.Time `json:"created_at"`
+}
+
+type LoveProbe struct {
+	ID         uint   `gorm:"primaryKey" json:"id"`
+	DeviceHash string `gorm:"index" json:"device_hash"`
+
+	// Party A (User)
+	NameA      string `json:"name_a"`
+	GenderA    string `json:"gender_a"`
+	BirthDateA string `json:"birth_date_a"` // YYYY-MM-DD HH:mm
+
+	// Party B (Target)
+	NameB      string `json:"name_b"`
+	GenderB    string `json:"gender_b"`
+	BirthDateB string `json:"birth_date_b"`
+
+	Story string `gorm:"type:text" json:"story"`
+
+	// Divination Result
+	BenGua        string `json:"ben_gua"`
+	BianGua       string `json:"bian_gua"`
+	ChangingLines string `json:"changing_lines"`
+
+	// AI Analysis
+	RawOutput     string `gorm:"type:text" json:"-"`
+	FinalResponse string `gorm:"type:text" json:"final_response"` // Stores the JSON structure from AI
+
+	CreatedAt time.Time `json:"created_at"`
 }
