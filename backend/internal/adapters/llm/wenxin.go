@@ -1,12 +1,14 @@
 package llm
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"fromheart/internal/config"
@@ -121,6 +123,23 @@ func (w *WenxinClient) GeneratePoem(ctx context.Context) (string, error) {
 	return w.doChat(ctx, payload)
 }
 
+func (w *WenxinClient) GenerateBlessing(ctx context.Context) (string, error) {
+	if w.apiKey == "" {
+		return "", errors.New("missing WENXIN_API_KEY")
+	}
+	// Similar simple prompt
+	payload := map[string]interface{}{
+			"model": w.model,
+			"messages": []map[string]string{
+					{
+							"role":    "user",
+							"content": "请生成一句简短的功德祝福语（不超过20字），风格庄重、慈悲、正能量。用于用户敲木鱼后增加功德。",
+					},
+			},
+	}
+	return w.doChat(ctx, payload)
+}
+
 func (w *WenxinClient) AnalyzeLove(ctx context.Context, req LoveRequest) (string, error) {
 	if w.apiKey == "" {
 		return "", errors.New("missing WENXIN_API_KEY")
@@ -210,62 +229,17 @@ func (w *WenxinClient) doChat(ctx context.Context, payload map[string]interface{
 	return parsed.Choices[0].Message.Content, nil
 }
 
-func (w *WenxinClient) GenerateBlessing(ctx context.Context) (string, error) {
-	prompt := "你是精通佛道与梅花易数的大师。请生成一句简短的、充满禅意与美好祝愿的诗句（七言或五言），祝福施舍香火的有缘人。要求：不要标题，仅一句诗，20字以内。"
-
+func (w *WenxinClient) Chat(ctx context.Context, history []map[string]string) (string, error) {
 	if w.apiKey == "" {
 		return "", errors.New("missing WENXIN_API_KEY")
 	}
 
 	payload := map[string]interface{}{
-		"model": w.model,
-		"messages": []map[string]string{
-			{"role": "user", "content": prompt},
-		},
+		"model":    w.model,
+		"messages": history,
 	}
 
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-
-	endpoint := w.baseURL + "/v2/chat/completions"
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+w.apiKey)
-
-	resp, err := w.httpClient.Do(request)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("api error: %d", resp.StatusCode)
-	}
-
-	var parsed struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-		Result string `json:"result,omitempty"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		return "", err
-	}
-
-	if len(parsed.Choices) > 0 {
-		return parsed.Choices[0].Message.Content, nil
-	}
-	if parsed.Result != "" {
-		return parsed.Result, nil
-	}
-	return "", errors.New("empty response")
+	return w.doChat(ctx, payload)
 }
 
 func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error) {
@@ -273,11 +247,7 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 		return nil, errors.New("missing WENXIN_API_KEY")
 	}
 
-	// Use "embedding-v1" (lowercase) which is often the ID for the OpenAI-compatible endpoint
-	// This model has 384 dimensions.
-	// Documentation reference: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Dmba8k71y
 	payload := map[string]interface{}{
-		"model": "embedding-v1",
 		"input": []string{text},
 	}
 
@@ -286,8 +256,11 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 		return nil, err
 	}
 
-	// Strictly follow the documentation provided by the user: /v2/embeddings
+	// Embedding endpoint usually different
+	// Assuming bge-large-zh or similar, or just a default embedding model path
+	// Wenxin embedding endpoint: /v2/embeddings
 	endpoint := w.baseURL + "/v2/embeddings"
+	
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -302,9 +275,7 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		var errBody map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errBody)
-		return nil, fmt.Errorf("embedding api error: url=%s, status=%d, body=%v", endpoint, resp.StatusCode, errBody)
+		return nil, fmt.Errorf("embedding error: %d", resp.StatusCode)
 	}
 
 	var parsed struct {
@@ -312,7 +283,6 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 			Embedding []float32 `json:"embedding"`
 		} `json:"data"`
 	}
-
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
 		return nil, err
 	}
@@ -324,55 +294,80 @@ func (w *WenxinClient) Embed(ctx context.Context, text string) ([]float32, error
 	return parsed.Data[0].Embedding, nil
 }
 
-func (w *WenxinClient) Chat(ctx context.Context, history []map[string]string) (string, error) {
+func (w *WenxinClient) ChatStream(ctx context.Context, history []map[string]string, onToken func(string)) error {
 	if w.apiKey == "" {
-		return "", errors.New("missing WENXIN_API_KEY")
+		return errors.New("missing WENXIN_API_KEY")
 	}
 
 	payload := map[string]interface{}{
 		"model":    w.model,
 		"messages": history,
+		"stream":   true,
 	}
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	endpoint := w.baseURL + "/v2/chat/completions"
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
-		return "", err
+		return err
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", "Bearer "+w.apiKey)
 
 	resp, err := w.httpClient.Do(request)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		var errBody map[string]interface{}
 		json.NewDecoder(resp.Body).Decode(&errBody)
-		return "", fmt.Errorf("wenxin api error: status %d, body: %v", resp.StatusCode, errBody)
+		return fmt.Errorf("wenxin stream error: status %d, body: %v", resp.StatusCode, errBody)
 	}
 
-	var parsed struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 {
+			continue
+		}
+		if !strings.HasPrefix(line, "data: ") {
+			continue
+		}
+		data := strings.TrimPrefix(line, "data: ")
+		
+		// Baidu/OpenAI convention: data: [DONE]
+		if data == "[DONE]" {
+			break
+		}
+
+		var chunk struct {
+			Choices []struct {
+				Delta struct {
+					Content string `json:"content"`
+				} `json:"delta"`
+			} `json:"choices"`
+		}
+		
+		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+			// Skip malformed chunks
+			continue
+		}
+
+		if len(chunk.Choices) > 0 {
+			content := chunk.Choices[0].Delta.Content
+			if content != "" {
+				onToken(content)
+			}
+		}
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		return "", err
-	}
-	if len(parsed.Choices) == 0 {
-		return "", errors.New("empty choices")
-	}
-	return parsed.Choices[0].Message.Content, nil
+
+	return nil
 }
 
 func formatContext(ctx string) string {

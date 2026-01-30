@@ -59,10 +59,14 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		api.POST("/wishes/:id/bless", wishHandler.BlessWish)
 
 		// Love Probe
-		api.POST("/love", loveHandler.Submit)
-		api.GET("/love/history", loveHandler.GetHistory)
-		api.GET("/love/:id", loveHandler.GetDetail)
-		api.POST("/love/:id/chat", loveHandler.Chat)
+		love := api.Group("/love")
+		{
+			love.POST("", loveHandler.Submit)
+			love.GET("/history", loveHandler.GetHistory)
+			love.GET("/:id", loveHandler.GetDetail)
+			love.POST("/:id/chat", loveHandler.Chat)
+			love.POST("/:id/chat/stream", loveHandler.ChatStream)
+		}
 
 		// Admin
 		api.GET("/admin/questions", handler.AdminAllHistory)

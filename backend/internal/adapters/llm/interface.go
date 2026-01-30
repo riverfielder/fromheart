@@ -33,5 +33,6 @@ type Client interface {
 	GenerateBlessing(ctx context.Context) (string, error)
 	AnalyzeLove(ctx context.Context, req LoveRequest) (string, error)
 	Chat(ctx context.Context, history []map[string]string) (string, error)
+	ChatStream(ctx context.Context, history []map[string]string, onToken func(string)) error
 	Embed(ctx context.Context, text string) ([]float32, error)
 }

@@ -506,3 +506,52 @@ func (s *QuestionService) ChatLove(ctx context.Context, id uint, message string,
 	// 4. Call LLM (Chat)
 	return s.llm.Chat(ctx, llmMessages)
 }
+
+func (s *QuestionService) ChatLoveStream(ctx context.Context, id uint, message string, history []ChatMessage, onToken func(string)) error {
+	// 1. Get Love Probe Context
+	probe, err := s.GetLoveProbe(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 2. Construct System Prompt & Messages
+	contextPrompt := fmt.Sprintf(`
+你正在与用户谈论他们的姻缘。
+背景信息：
+甲方：%s (%s, %s)
+乙方：%s (%s, %s)
+故事：%s
+
+卦象：%s -> %s
+变爻：%s
+
+之前的分析结果：%s
+
+用户现在有新的追问。请基于以上八字和卦象背景进行解答。
+`,
+		probe.NameA, probe.GenderA, probe.BirthDateA,
+		probe.NameB, probe.GenderB, probe.BirthDateB,
+		probe.Story,
+		probe.BenGua, probe.BianGua, probe.ChangingLines,
+		probe.FinalResponse,
+	)
+
+	var llmMessages []map[string]string
+	llmMessages = append(llmMessages, map[string]string{
+		"role":    "system",
+		"content": contextPrompt,
+	})
+	for _, msg := range history {
+		llmMessages = append(llmMessages, map[string]string{
+			"role":    msg.Role,
+			"content": msg.Content,
+		})
+	}
+	llmMessages = append(llmMessages, map[string]string{
+		"role":    "user",
+		"content": message,
+	})
+
+	// 3. Call LLM (Stream)
+	return s.llm.ChatStream(ctx, llmMessages, onToken)
+}

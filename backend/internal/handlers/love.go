@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -250,5 +252,62 @@ func (h *LoveHandler) Chat(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"response": response,
+	})
+}
+
+func (h *LoveHandler) ChatStream(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req loveChatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Verify exists
+	_, err = h.qs.GetLoveProbe(c.Request.Context(), uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Transfer-Encoding", "chunked")
+
+	c.Stream(func(w io.Writer) bool {
+		err := h.qs.ChatLoveStream(c.Request.Context(), uint(id), req.Message, req.History, func(token string) {
+			// Write SSE format: data: <token>\n\n
+			// But we need to be careful about newlines in token. 
+			// Standard SSE sends "data: payload\n\n". 
+			// If payload has newlines, it's usually valid in data.
+			// Let's use JSON encoding for the data payload to be safe.
+			
+			// Actually simpler: just write raw text? No, client expects something.
+			// Let's assume client reads raw text stream (not SSE) or full SSE.
+			// Standard is SSE.
+			// We can send JSON chunks.
+			// data: {"content": "..."}
+			
+			// Let's wrap in JSON
+			chunk, _ := json.Marshal(gin.H{"content": token})
+			fmt.Fprintf(w, "data: %s\n\n", chunk)
+		})
+		if err != nil {
+			// End of stream or error
+			// If error, maybe send error event?
+			return false
+		}
+		// Send done signal?
+		// Usually client detects end of stream.
+		// We can send [DONE]
+		fmt.Fprintf(w, "data: [DONE]\n\n")
+		return false
 	})
 }

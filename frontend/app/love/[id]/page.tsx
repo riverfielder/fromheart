@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getLoveDetail, chatLove } from "../../../lib/api";
+import { getLoveDetail, chatLoveStream } from "../../../lib/api";
 
 type LoveDetail = {
     id: number;
@@ -56,16 +56,30 @@ export default function LoveDetailPage() {
         
         const userMsg = input.trim();
         setInput("");
+        // Optimistic update
         setMessages(prev => [...prev, { role: "user", content: userMsg }]);
         setChatLoading(true);
 
+        // Placeholder for assistant message
+        setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+
         try {
-            // Filter history for API
             const historyForApi = messages.map(m => ({ role: m.role, content: m.content }));
-            const res = await chatLove(detail.id, userMsg, historyForApi);
-            setMessages(prev => [...prev, { role: "assistant", content: res.response }]);
+            
+            await chatLoveStream(detail.id, userMsg, historyForApi, (token) => {
+                setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last.role === "assistant") {
+                        return [...prev.slice(0, -1), { ...last, content: last.content + token }];
+                    }
+                    return prev;
+                });
+            });
         } catch (e) {
-            setMessages(prev => [...prev, { role: "assistant", content: "网络仿佛有些拥挤，请稍后再试..." }]);
+             setMessages(prev => {
+                const last = prev[prev.length - 1];
+                return [...prev.slice(0, -1), { role: "assistant", content: "..." + (last.content || "网络仿佛有些拥挤，请稍后再试...") }];
+             });
         } finally {
             setChatLoading(false);
         }
