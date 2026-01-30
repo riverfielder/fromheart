@@ -76,9 +76,18 @@ export default function LoveDetailPage() {
                 });
             });
         } catch (e) {
+             let errorMessage = "网络仿佛有些拥挤，请稍后再试...";
+             if (e instanceof Error) {
+                 if (e.message === "daily_chat_limit_reached") {
+                     errorMessage = "今日追问次数已用完，明日再来吧 🙏";
+                 } else if (e.message === "server_busy") {
+                     errorMessage = "服务器正忙，大师正在潜心推演中，请稍后再试...";
+                 }
+             }
+             
              setMessages(prev => {
                 const last = prev[prev.length - 1];
-                return [...prev.slice(0, -1), { role: "assistant", content: "..." + (last.content || "网络仿佛有些拥挤，请稍后再试...") }];
+                return [...prev.slice(0, -1), { role: "assistant", content: errorMessage }];
              });
         } finally {
             setChatLoading(false);

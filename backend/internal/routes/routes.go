@@ -36,6 +36,10 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 	// Apply CSRF protection
 	api.Use(middleware.CSRF())
 
+	// 【新增】应用全局并发限制，保护服务器不崩溃
+	// 限制同时处理的 AI 请求为 60 个（根据机器配置调整）
+	api.Use(middleware.GlobalConcurrencyLimit(rdb, 60))
+
 	{
 		api.POST("/register", authHandler.Register)
 		api.POST("/login", authHandler.Login)
@@ -47,8 +51,9 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 
 		api.POST("/question", handler.Ask)
 		api.GET("/divination/:id", handler.GetDivination)
-		api.POST("/divination/:id/chat", handler.Chat)
-		api.POST("/divination/:id/chat/stream", handler.ChatStream)
+		// 追问接口添加每日限制
+		api.POST("/divination/:id/chat", middleware.DailyChatLimit(rdb), handler.Chat)
+		api.POST("/divination/:id/chat/stream", middleware.DailyChatLimit(rdb), handler.ChatStream)
 		api.GET("/history", handler.History)
 		api.GET("/poem", handler.GetPoem)
 		api.GET("/usage", handler.GetUsage)
@@ -65,8 +70,9 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 			love.POST("", loveHandler.Submit)
 			love.GET("/history", loveHandler.GetHistory)
 			love.GET("/:id", loveHandler.GetDetail)
-			love.POST("/:id/chat", loveHandler.Chat)
-			love.POST("/:id/chat/stream", loveHandler.ChatStream)
+			// 桃花追问接口添加每日限制
+			love.POST("/:id/chat", middleware.DailyChatLimit(rdb), loveHandler.Chat)
+			love.POST("/:id/chat/stream", middleware.DailyChatLimit(rdb), loveHandler.ChatStream)
 		}
 
 		// Admin

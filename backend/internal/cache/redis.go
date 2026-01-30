@@ -11,5 +11,9 @@ func NewRedis(cfg config.Config) *redis.Client {
 		Addr:     cfg.RedisAddr,
 		Password: cfg.RedisPass,
 		DB:       0,
+		
+		// Connection Pool Config
+		PoolSize:     100, // Maximum number of socket connections
+		MinIdleConns: 10,  // Minimum number of idle connections
 	})
 }

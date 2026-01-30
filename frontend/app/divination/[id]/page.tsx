@@ -54,9 +54,18 @@ export default function DivinationDetailPage() {
       
     } catch (e) {
       // Error handling
+       let errorMessage = "[网络连接中断，请重试]";
+       if (e instanceof Error) {
+           if (e.message === "daily_chat_limit_reached") {
+               errorMessage = "今日追问次数已用完，明日再来吧 🙏";
+           } else if (e.message === "server_busy") {
+               errorMessage = "服务器正忙，正在排队中，请稍后重试...";
+           }
+       }
+       
        setMessages(prev => {
          const last = prev[prev.length - 1];
-         return [...prev.slice(0, -1), { ...last, content: last.content + "\n[网络连接中断，请重试]" }];
+         return [...prev.slice(0, -1), { ...last, content: last.content + "\n" + errorMessage }];
        });
     } finally {
       setChatLoading(false);

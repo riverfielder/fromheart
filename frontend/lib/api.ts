@@ -138,7 +138,18 @@ export async function chatLoveStream(
         body: JSON.stringify({ message, history })
     });
 
-    if (!res.ok) throw new Error("Chat failed");
+    if (!res.ok) {
+        if (res.status === 403) {
+            const errorData = await res.json().catch(() => ({}));
+            if (errorData.error === "daily_chat_limit_reached") {
+                throw new Error("daily_chat_limit_reached");
+            }
+        }
+        if (res.status === 503) {
+            throw new Error("server_busy");
+        }
+        throw new Error("Chat failed");
+    }
     if (!res.body) throw new Error("No body");
 
     const reader = res.body.getReader();
@@ -362,7 +373,18 @@ export async function chatStream(
         body: JSON.stringify({ message, history })
     });
 
-    if (!res.ok) throw new Error("Chat failed");
+    if (!res.ok) {
+        if (res.status === 403) {
+            const errorData = await res.json().catch(() => ({}));
+            if (errorData.error === "daily_chat_limit_reached") {
+                throw new Error("daily_chat_limit_reached");
+            }
+        }
+        if (res.status === 503) {
+            throw new Error("server_busy");
+        }
+        throw new Error("Chat failed");
+    }
     if (!res.body) throw new Error("No body");
 
     const reader = res.body.getReader();
