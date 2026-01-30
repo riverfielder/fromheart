@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -73,12 +72,29 @@ func (h *LoveHandler) Submit(c *gin.Context) {
 		return
 	}
 
-	// Trim Markdown if present
-	cleanJSON := strings.TrimPrefix(rawAnalysis, "```json")
-	cleanJSON = strings.TrimPrefix(cleanJSON, "```")
-	cleanJSON = strings.TrimSuffix(cleanJSON, "```")
+	// Trim Markdown if present and find JSON object
+	cleanJSON := extractJSON(rawAnalysis)
 
 	// 3. Save to DB
+	// Try parsing first to ensure validity, if fail, create fallback
+	var finalObj map[string]interface{}
+	if err := json.Unmarshal([]byte(cleanJSON), &finalObj); err != nil {
+		fmt.Printf("JSON Unmarshal Error: %v\nRaw: %s\n", err, rawAnalysis)
+		// Fallback: Construct a valid object using the raw text
+		finalObj = map[string]interface{}{
+			"score":                0, // 0 indicates exception
+			"keyword":              "天机难测",
+			"bazi_analysis":        "服务器解析数据时遭遇格式异常，请参考：\n\n" + rawAnalysis,
+			"hexagram_analysis":    "（见上文）",
+			"story_interpretation": "（格式解析异常）",
+			"advice":               []string{"建议稍后重试", "或直接参考上述文本"},
+			"poem":                 "道可道非常道",
+		}
+		// Update cleanJSON to the fallback valid JSON
+		fallbackBytes, _ := json.Marshal(finalObj)
+		cleanJSON = string(fallbackBytes)
+	}
+
 	probe := db.LoveProbe{
 		DeviceHash:    req.DeviceHash,
 		NameA:         req.NameA,
@@ -101,15 +117,20 @@ func (h *LoveHandler) Submit(c *gin.Context) {
 		return
 	}
 
-	// Parse JSON to return object, not string
-	var finalObj map[string]interface{}
-	_ = json.Unmarshal([]byte(cleanJSON), &finalObj)
-
 	c.JSON(http.StatusOK, gin.H{
 		"id":       probe.ID,
 		"analysis": finalObj,
 		"hexagram": divResult.BenGua, // Simplified return
 	})
+}
+
+func extractJSON(s string) string {
+	start := strings.Index(s, "{")
+	end := strings.LastIndex(s, "}")
+	if start == -1 || end == -1 || start >= end {
+		return s
+	}
+	return s[start : end+1]
 }
 
 func (h *LoveHandler) GetHistory(c *gin.Context) {
@@ -281,33 +302,12 @@ func (h *LoveHandler) ChatStream(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Header("Transfer-Encoding", "chunked")
 
-	c.Stream(func(w io.Writer) bool {
-		err := h.qs.ChatLoveStream(c.Request.Context(), uint(id), req.Message, req.History, func(token string) {
-			// Write SSE format: data: <token>\n\n
-			// But we need to be careful about newlines in token.
-			// Standard SSE sends "data: payload\n\n".
-			// If payload has newlines, it's usually valid in data.
-			// Let's use JSON encoding for the data payload to be safe.
-
-			// Actually simpler: just write raw text? No, client expects something.
-			// Let's assume client reads raw text stream (not SSE) or full SSE.
-			// Standard is SSE.
-			// We can send JSON chunks.
-			// data: {"content": "..."}
-
-			// Let's wrap in JSON
-			chunk, _ := json.Marshal(gin.H{"content": token})
-			fmt.Fprintf(w, "data: %s\n\n", chunk)
-		})
-		if err != nil {
-			// End of stream or error
-			// If error, maybe send error event?
-			return false
-		}
-		// Send done signal?
-		// Usually client detects end of stream.
-		// We can send [DONE]
-		fmt.Fprintf(w, "data: [DONE]\n\n")
-		return false
+	h.qs.ChatLoveStream(c.Request.Context(), uint(id), req.Message, req.History, func(token string) {
+		chunk, _ := json.Marshal(gin.H{"content": token})
+		fmt.Fprintf(c.Writer, "data: %s\n\n", chunk)
+		c.Writer.Flush()
 	})
+
+	fmt.Fprintf(c.Writer, "data: [DONE]\n\n")
+	c.Writer.Flush()
 }

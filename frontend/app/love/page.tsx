@@ -256,6 +256,14 @@ export default function LovePage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-white/80 backdrop-blur rounded-3xl p-6 shadow-2xl border border-white space-y-6"
             >
+                {/* Fallback if analysis is missing (though backend should catch this now) */}
+                {!result.analysis ? (
+                    <div className="text-center py-10 text-stone-500">
+                        <p>结果解析异常，请重试。</p>
+                        <button onClick={() => setStep("input")} className="mt-4 text-[#d45d79] underline">返回</button>
+                    </div>
+                ) : (
+                <>
                 {/* Header Score */}
                 <div className="text-center relative py-6 border-b border-pink-100">
                     <div className="text-5xl font-bold text-[#d45d79] mb-2">{result.analysis.score}</div>
@@ -310,6 +318,8 @@ export default function LovePage() {
                         再算一卦
                     </button>
                 </div>
+                </>
+                )}
             </motion.div>
           )}
 

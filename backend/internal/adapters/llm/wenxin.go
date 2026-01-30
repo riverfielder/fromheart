@@ -179,7 +179,7 @@ func (w *WenxinClient) AnalyzeLove(ctx context.Context, req LoveRequest) (string
 		"model": w.model,
 		"messages": []map[string]string{
 			{"role": "system", "content": sysPrompt},
-			{"role": "user", "content": userContent},
+			{"role": "user", "content": userContent + "\n\n请务必只返回纯JSON内容，严禁使用Markdown代码块（如```json），严禁包含任何前缀或后缀文字。"},
 		},
 		"temperature": 0.7, // Slightly creative
 	}
