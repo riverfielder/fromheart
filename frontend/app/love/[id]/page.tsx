@@ -110,7 +110,7 @@ export default function LoveDetailPage() {
                     {/* Header Score */}
                     <div className="text-center relative py-4 border-b border-pink-100">
                         <div className="text-4xl font-bold text-[#d45d79] mb-1">
-                            {detail.analysis?.analysis?.score || "???"}
+                            {detail.analysis?.score || "???"}
                         </div>
                         <div className="text-stone-500 text-[10px] tracking-widest uppercase">缘分指数</div>
                     </div>
@@ -118,7 +118,7 @@ export default function LoveDetailPage() {
                     {/* Poem */}
                     <div className="text-center px-4">
                         <p className="text-base text-stone-700 italic leading-relaxed">
-                            “{detail.analysis?.analysis?.poem}”
+                            “{detail.analysis?.poem}”
                         </p>
                     </div>
 
@@ -129,7 +129,7 @@ export default function LoveDetailPage() {
                                 <span>🔮</span> 命理合盘
                             </h3>
                             <p className="text-stone-700 text-xs leading-loose text-justify">
-                                {detail.analysis?.analysis?.bazi_analysis}
+                                {detail.analysis?.bazi_analysis}
                             </p>
                         </div>
                         <div className="bg-emerald-50/50 p-4 rounded-xl">
@@ -137,7 +137,7 @@ export default function LoveDetailPage() {
                                 <span>📜</span> 卦象指引 ({detail.hexagram})
                             </h3>
                             <p className="text-stone-700 text-xs leading-loose text-justify">
-                                {detail.analysis?.analysis?.hexagram_analysis}
+                                {detail.analysis?.hexagram_analysis}
                             </p>
                         </div>
                     </div>
