@@ -49,6 +49,7 @@ func (w *WenxinClient) GenerateAnswer(ctx context.Context, req GenerateRequest) 
 		}
 		if req.UserProfile.BirthDateStr != "" {
 			userDesc += fmt.Sprintf("- 生辰：%s\n", req.UserProfile.BirthDateStr)
+			userDesc += "请务必根据此生辰推演其八字（四柱），分析五行强弱喜忌，作为解读的重要依据。\n"
 		}
 		if req.UserProfile.Zodiac != "" {
 			userDesc += fmt.Sprintf("- 星座：%s\n", req.UserProfile.Zodiac)
@@ -56,7 +57,7 @@ func (w *WenxinClient) GenerateAnswer(ctx context.Context, req GenerateRequest) 
 		if req.UserProfile.MBTI != "" {
 			userDesc += fmt.Sprintf("- MBTI心性：%s\n", req.UserProfile.MBTI)
 		}
-		userDesc += "请结合求测者的个人画像（性别，生辰，星座，MBTI）进行定制化解读，使建议更贴合其本心。\n"
+		userDesc += "解读优先级：请重点依据【八字命理（四柱五行）】与【梅花易数卦象】进行联合分析，MBTI与星座仅作为性格层面的辅助参考。请确保回答中有体现对八字五行的具体分析。\n"
 	}
 
 	payload := map[string]interface{}{
@@ -78,8 +79,8 @@ direct_answer 风格必须晦涩高深、玄妙莫测，如古代签文般充满
 请严格以此格式单纯返回 JSON，不要包含 markdown 标记：
 {
   "direct_answer": "...",
-  "summary": "基于卦象的详细结构化解读（涉及数字必须使用汉字，如初、二、三...）",
-  "colloquial_explanation": "用通俗易懂的大白话解释卦象含义，针对用户的问题给出直白的结论，就像老朋友聊天一样亲切。若有用户画像信息，请结合其特质（如MBTI、星座）给予更贴心的指引。",
+  "summary": "基于卦象与八字命理的详细结构化解读（涉及数字必须使用汉字）。请分析卦象的五行生克，并结合用户的八字喜忌进行论断。",
+  "colloquial_explanation": "用通俗易懂的大白话解释卦象与命理含义。若有八字信息，请指出五行对运势的影响；结合MBTI/星座特质给予贴心指引。",
   "advice": ["建议1", "建议2", ...],
   "warnings": ["忌讳1", "忌讳2", ...],
   "keywords": ["关键词1", "关键词2", ...]
