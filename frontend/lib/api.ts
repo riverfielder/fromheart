@@ -152,6 +152,18 @@ export async function getAllQuestions(adminSecret: string) {
     return res.json();
 }
 
+export async function getAllLoveProbes(adminSecret: string) {
+  const res = await fetch(`${API_BASE}/api/admin/love`, {
+    ...fetchOptions,
+    headers: {
+      ...getHeaders(),
+      "X-Admin-Secret": adminSecret
+    }
+  });
+  if (!res.ok) throw new Error("Failed to fetch love probes");
+  return res.json();
+}
+
 export interface ChatMessage {
   role: string;
   content: string;

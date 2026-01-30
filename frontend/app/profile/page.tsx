@@ -74,7 +74,7 @@ export default function ProfilePage() {
         <div className="max-w-md mx-auto relative z-10">
             <header className="mb-8 flex items-center justify-between">
                 <Link href="/" className="text-stone-400 text-sm hover:text-stone-600 font-serif">
-                   ← 返回问心
+                   ← 返回
                 </Link>
                 <h1 className="text-xl font-serif text-stone-800 tracking-widest font-bold">命理档案</h1>
                 <div className="w-12"></div>

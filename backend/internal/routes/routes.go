@@ -62,7 +62,9 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		api.POST("/love", loveHandler.Submit)
 		api.GET("/love/history", loveHandler.GetHistory)
 
+		// Admin
 		api.GET("/admin/questions", handler.AdminAllHistory)
+		api.GET("/admin/love", loveHandler.AdminList)
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})

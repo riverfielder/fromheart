@@ -28,7 +28,7 @@ func main() {
 	questionHandler := handlers.NewQuestionHandler(questionService)
 	authHandler := handlers.NewAuthHandler(postgres, cfg)
 	wishHandler := handlers.NewWishHandler(postgres)
-	loveHandler := handlers.NewLoveHandler(postgres, llmClient, questionService)
+	loveHandler := handlers.NewLoveHandler(postgres, llmClient, questionService, cfg.AdminSecret)
 
 	router := routes.NewRouter(questionHandler, authHandler, wishHandler, loveHandler, cfg, redisClient)
 

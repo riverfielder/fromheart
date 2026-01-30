@@ -16,13 +16,14 @@ import (
 )
 
 type LoveHandler struct {
-	db  *gorm.DB
-	llm llm.Client
-	qs  *services.QuestionService // Reuse count limits if needed
+	db          *gorm.DB
+	llm         llm.Client
+	qs          *services.QuestionService
+	adminSecret string
 }
 
-func NewLoveHandler(db *gorm.DB, llm llm.Client, qs *services.QuestionService) *LoveHandler {
-	return &LoveHandler{db: db, llm: llm, qs: qs}
+func NewLoveHandler(db *gorm.DB, llm llm.Client, qs *services.QuestionService, adminSecret string) *LoveHandler {
+	return &LoveHandler{db: db, llm: llm, qs: qs, adminSecret: adminSecret}
 }
 
 type LoveSubmission struct {
@@ -126,4 +127,50 @@ func (h *LoveHandler) GetHistory(c *gin.Context) {
 	// GORM doesn't auto-unmarshal text to JSON map, so we'll just return raw for now or map it.
 	// For simplicity, let's just return the list, frontend can parse if needed or we assume simplified view.
 	c.JSON(http.StatusOK, probes)
+}
+
+func (h *LoveHandler) AdminList(c *gin.Context) {
+	secret := c.GetHeader("X-Admin-Secret")
+	if secret == "" {
+		secret = c.Query("secret") // Allow query param too
+	}
+	if h.adminSecret == "" || secret != h.adminSecret {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var probes []db.LoveProbe
+	if err := h.db.Order("created_at desc").Limit(100).Find(&probes).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch records"})
+		return
+	}
+
+	// We might want to parse the FinalResponse string to JSON for the frontend to render nicely,
+	// or let frontend do it.
+	// Ideally, we return the parsed data.
+	var result []map[string]interface{}
+	for _, probe := range probes {
+		var analysis map[string]interface{}
+		if probe.FinalResponse != "" {
+			_ = json.Unmarshal([]byte(probe.FinalResponse), &analysis)
+		}
+
+		item := map[string]interface{}{
+			"id":           probe.ID,
+			"device_hash":  probe.DeviceHash,
+			"name_a":       probe.NameA,
+			"gender_a":     probe.GenderA,
+			"birth_date_a": probe.BirthDateA,
+			"name_b":       probe.NameB,
+			"gender_b":     probe.GenderB,
+			"birth_date_b": probe.BirthDateB,
+			"story":        probe.Story,
+			"hexagram":     probe.BenGua,
+			"created_at":   probe.CreatedAt,
+			"analysis":     analysis,
+		}
+		result = append(result, item)
+	}
+
+	c.JSON(http.StatusOK, result)
 }
