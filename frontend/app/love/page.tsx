@@ -176,11 +176,47 @@ export default function LovePage() {
                      />
                      <motion.div
                         initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1, rotate: 360 }}
-                        transition={{ delay: 1.8, duration: 1 }}
-                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl text-red-500"
+                        animate={{ 
+                            scale: [1, 1.15, 1],
+                            opacity: 1,
+                            filter: ["drop-shadow(0 4px 6px rgba(244, 63, 94, 0.2))", "drop-shadow(0 10px 15px rgba(244, 63, 94, 0.4))", "drop-shadow(0 4px 6px rgba(244, 63, 94, 0.2))"]
+                        }}
+                        transition={{ 
+                            delay: 1.8, 
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            ease: "easeInOut"
+                        }}
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
                      >
-                        ❤️
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="heartGradient" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stopColor="#FB7185" /> 
+                                    <stop offset="100%" stopColor="#E11D48" />
+                                </linearGradient>
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="2" result="blur"/>
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                                </filter>
+                            </defs>
+                            <path 
+                                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
+                                fill="url(#heartGradient)" 
+                                stroke="#FFFFFF" 
+                                strokeWidth="1.5"
+                                strokeLinejoin="round"
+                            />
+                            <path 
+                                d="M12 5.5C12 5.5 13.5 4.5 15.5 4.5C17.5 4.5 19.5 6 19.5 8.5" 
+                                stroke="white" 
+                                strokeWidth="1" 
+                                strokeOpacity="0.4"
+                                strokeLinecap="round"
+                                fill="none"
+                            />
+                        </svg>
                      </motion.div>
                 </div>
                 
