@@ -237,32 +237,50 @@ export default function HomePage() {
             </motion.div>
           </Link>
 
-          {/* Incense Icon */}
-          <motion.div 
-            className="pointer-events-auto group w-10 cursor-pointer"
-            onClick={handleOpenDonation}
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: 1, 
-              scale: wiggleIncense ? [1, 1.4, 0.9, 1.1, 1] : 1,
-              rotate: wiggleIncense ? [0, -15, 15, -10, 10, 0] : 0,
-              filter: `grayscale(${Math.max(0, 1 - usageCount * 0.33) * 100}%) opacity(${0.5 + Math.min(usageCount, 3) * 0.16})`,
-            }}
-            transition={{ 
-                opacity: { duration: 0.5 },
-                filter: { duration: 0.5 },
-                scale: { duration: 0.6, type: "spring" },
-                rotate: { duration: 0.5 }
-            }}
-            whileHover={{ scale: 1.1 }}
-          >
-            <div className="flex flex-col items-center relative">
-                <div className="h-8 flex items-center justify-center">
-                    <span className="text-2xl filter drop-shadow-md leading-none">🕯️</span>
+          {/* Right Group */}
+          <div className="flex gap-4 pointer-events-auto">
+            {/* Wish Tree Icon */}
+            <Link href="/wishing-tree" className="group w-10 block no-underline">
+                <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                whileHover={{ scale: 1.1 }}
+                className="flex flex-col items-center relative"
+                >
+                    <div className="h-8 flex items-center justify-center">
+                        <span className="text-2xl filter drop-shadow-md opacity-90 leading-none">🎋</span>
+                    </div>
+                    <span className="text-[10px] text-stone-500 font-serif mt-1">祈福</span>
+                </motion.div>
+            </Link>
+
+            {/* Incense Icon */}
+            <motion.div 
+                className="group w-10 cursor-pointer"
+                onClick={handleOpenDonation}
+                initial={{ opacity: 0 }}
+                animate={{ 
+                opacity: 1, 
+                scale: wiggleIncense ? [1, 1.4, 0.9, 1.1, 1] : 1,
+                rotate: wiggleIncense ? [0, -15, 15, -10, 10, 0] : 0,
+                filter: `grayscale(${Math.max(0, 1 - usageCount * 0.33) * 100}%) opacity(${0.5 + Math.min(usageCount, 3) * 0.16})`,
+                }}
+                transition={{ 
+                    opacity: { duration: 0.5 },
+                    filter: { duration: 0.5 },
+                    scale: { duration: 0.6, type: "spring" },
+                    rotate: { duration: 0.5 }
+                }}
+                whileHover={{ scale: 1.1 }}
+            >
+                <div className="flex flex-col items-center relative">
+                    <div className="h-8 flex items-center justify-center">
+                        <span className="text-2xl filter drop-shadow-md leading-none">🕯️</span>
+                    </div>
+                    <span className="text-[10px] text-stone-500 font-serif mt-1">香火</span>
                 </div>
-                <span className="text-[10px] text-stone-500 font-serif mt-1">香火</span>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
       </div>
 
       {/* Donation Modal */}

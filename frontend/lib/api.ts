@@ -185,3 +185,37 @@ export async function updateProfile(data: {
   if (!res.ok) throw new Error("Update failed");
   return res.json();
 }
+
+export interface Wish {
+  id: number;
+  content: string;
+  type: string;
+  blessing_count: number;
+  created_at: string;
+}
+
+export async function getWishes() {
+  const res = await fetch(`${API_BASE}/api/wishes`, { ...fetchOptions, headers: getHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch wishes");
+  return res.json() as Promise<Wish[]>;
+}
+
+export async function createWish(content: string, type: string, deviceHash: string) {
+  const res = await fetch(`${API_BASE}/api/wishes`, {
+    ...fetchOptions,
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ content, type, device_hash: deviceHash }),
+  });
+  if (!res.ok) throw new Error("Failed to create wish");
+  return res.json();
+}
+
+export async function blessWish(id: number) {
+  const res = await fetch(`${API_BASE}/api/wishes/${id}/bless`, {
+    ...fetchOptions,
+    method: "POST",
+    headers: getHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to bless wish");
+}

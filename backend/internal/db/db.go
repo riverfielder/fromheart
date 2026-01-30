@@ -35,7 +35,7 @@ func NewPostgres(cfg config.Config) *gorm.DB {
 	// Useful to ensure load balancing and prevent stale connection issues.
 	// sqlDB.SetConnMaxLifetime(time.Hour)
 
-	if err := db.AutoMigrate(&DailyQuestion{}, &Divination{}, &User{}); err != nil {
+	if err := db.AutoMigrate(&DailyQuestion{}, &Divination{}, &User{}, &Wish{}); err != nil {
 		log.Fatal(err)
 	}
 	return db

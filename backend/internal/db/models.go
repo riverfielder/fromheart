@@ -43,3 +43,12 @@ type Divination struct {
 	CreatedAt       time.Time
 	DailyQuestion   *DailyQuestion `json:"daily_question,omitempty" gorm:"foreignKey:DailyQuestionID"`
 }
+
+type Wish struct {
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	Content       string    `gorm:"size:200" json:"content"`
+	DeviceHash    string    `json:"-"` // Hide from JSON
+	BlessingCount int       `json:"blessing_count"`
+	Type          string    `gorm:"size:20" json:"type"` // e.g. health, wealth, love, study
+	CreatedAt     time.Time `json:"created_at"`
+}
