@@ -50,6 +50,17 @@ export default function Header() {
                  </motion.div>
              </Link>
 
+             {/* Yearly Forecast Icon - NEW */}
+             <Link href="/yearly" className="group block no-underline">
+                 <motion.div 
+                 whileHover={{ scale: 1.1 }}
+                 className="flex flex-col items-center justify-center w-8"
+                 >
+                     <span className="text-xl opacity-90 leading-none filter drop-shadow-sm">📅</span>
+                     <span className="text-[9px] text-stone-500 font-serif -mt-0.5 transform scale-90">流年</span>
+                 </motion.div>
+             </Link>
+
             {/* Wish Tree Icon */}
             <Link href="/wishing-tree" className="group block no-underline">
                 <motion.div 

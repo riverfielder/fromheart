@@ -627,3 +627,56 @@ func (s *QuestionService) ChatLoveStream(ctx context.Context, id uint, message s
 	// 3. Call LLM (Stream)
 	return s.llm.ChatStream(ctx, llmMessages, onToken)
 }
+
+type YearlyForecastRequest struct {
+	Name   string `json:"name" binding:"required"`
+	Gender string `json:"gender" binding:"required"`
+	Birth  string `json:"birth" binding:"required"` // YYYY-MM-DD HH:mm
+	Year   int    `json:"year" binding:"required"`
+}
+
+func (s *QuestionService) CalculateYearlyFortune(ctx context.Context, req YearlyForecastRequest) (*db.YearlyFortune, error) {
+	// Check daily limit (optional, but good practice)
+	// For now, let's assume yearly checks are less frequent but maybe expensive?
+	// Let's reuse the limiter if available, or skip.
+	// Since there is no device hash in this request, maybe we skip limit or add it later. (I will skip for now)
+
+	// 1. Generate Hexagram based on user info + time
+	// Combine inputs to form a "seed string"
+	seedKey := fmt.Sprintf("%s-%s-%s-%d", req.Name, req.Gender, req.Birth, req.Year)
+	result := divination.Generate(seedKey)
+
+	// 2. Call LLM
+	llmReq := llm.YearlyRequest{
+		Name:          req.Name,
+		Gender:        req.Gender,
+		Birth:         req.Birth,
+		Year:          req.Year,
+		BenGua:        result.BenGua,
+		BianGua:       result.BianGua,
+		ChangingLines: result.ChangingLines,
+	}
+
+	analysisJSON, err := s.llm.AnalyzeYearly(ctx, llmReq)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Save to DB
+	fortune := &db.YearlyFortune{
+		Name:          req.Name,
+		Gender:        req.Gender,
+		BirthDate:     req.Birth,
+		Year:          req.Year,
+		BenGua:        result.BenGua,
+		BianGua:       result.BianGua,
+		ChangingLines: result.ChangingLines,
+		FinalResponse: analysisJSON,
+	}
+
+	if err := s.postgres.Create(fortune).Error; err != nil {
+		return nil, err
+	}
+
+	return fortune, nil
+}

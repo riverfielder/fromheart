@@ -469,3 +469,35 @@ export async function askQuestion(question: string, deviceHash: string, secret?:
   }
   return data;
 }
+
+export interface YearlyResponse {
+  id: number;
+  name: string;
+  gender: string;
+  birth_date: string;
+  year: number;
+  ben_gua: string;
+  bian_gua: string;
+  changing_lines: string;
+  final_response: string; // JSON string
+  created_at: string;
+}
+
+export async function submitYearlyForecast(data: {
+  name: string;
+  gender: string;
+  birth: string;
+  year: number;
+}) {
+  const res = await fetch(`${API_BASE}/api/yearly`, {
+    ...fetchOptions,
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Request failed");
+  }
+  return res.json() as Promise<YearlyResponse>;
+}
