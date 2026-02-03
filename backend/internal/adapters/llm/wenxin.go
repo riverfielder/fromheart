@@ -187,6 +187,55 @@ func (w *WenxinClient) AnalyzeLove(ctx context.Context, req LoveRequest) (string
 	return w.doChat(ctx, payload)
 }
 
+func (w *WenxinClient) AnalyzeYearly(ctx context.Context, req YearlyRequest) (string, error) {
+	if w.apiKey == "" {
+		return "", errors.New("missing WENXIN_API_KEY")
+	}
+
+	sysPrompt := `你是一位精通八字命理与流年运势的大师。
+你需要结合用户的八字（出生时间）和所占流年卦象，推算其在特定年份（如2024年）的整体运势。
+
+分析维度：
+1. **整体运势**：年度关键词与总评。
+2. **每月运势**：简要概括重点月份（无需12个月都详列，挑重点）。
+3. **事业/财运**：升职加薪机会与风险。
+4. **感情/人际**：桃花、家庭关系。
+5. **健康/平安**：注意事项。
+
+输出格式必须为纯JSON，不要包含markdown标记：
+{
+  "score": 88,
+  "keyword": "稳中求进",
+  "overview": "整体运势分析...",
+  "career_finance": "事业财运分析...",
+  "love_relationship": "感情人际分析...",
+  "health": "健康分析...",
+  "months": [{"month": "农历正月", "desc": "..."}, ...],
+  "advice": ["建议1", "建议2"...]
+}`
+
+	userContent := fmt.Sprintf(`
+用户：%s (%s, %s)
+测算年份：%d
+
+所占卦象：
+本卦：%s
+变卦：%s
+动爻：%s
+`, req.Name, req.Gender, req.Birth, req.Year, req.BenGua, req.BianGua, req.ChangingLines)
+
+	payload := map[string]interface{}{
+		"model": w.model,
+		"messages": []map[string]string{
+			{"role": "system", "content": sysPrompt},
+			{"role": "user", "content": userContent + "\n\n请务必只返回纯JSON内容，严禁使用Markdown代码块，严禁包含任何前缀或后缀。"},
+		},
+		"temperature": 0.7,
+	}
+
+	return w.doChat(ctx, payload)
+}
+
 func (w *WenxinClient) doChat(ctx context.Context, payload map[string]interface{}) (string, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {

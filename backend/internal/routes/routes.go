@@ -61,6 +61,8 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		api.GET("/poem", handler.GetPoem)
 		api.GET("/usage", handler.GetUsage)
 		api.GET("/blessing", handler.GetBlessing)
+		// Yearly Forecast
+		api.POST("/yearly", handler.GetYearlyFortune)
 
 		// Wishing Tree
 		api.GET("/wishes", wishHandler.ListWishes)

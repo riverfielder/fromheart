@@ -80,3 +80,25 @@ type LoveProbe struct {
 
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type YearlyFortune struct {
+	ID         uint   `gorm:"primaryKey" json:"id"`
+	DeviceHash string `gorm:"index" json:"device_hash"`
+	UserID     *uint  `gorm:"index" json:"user_id,omitempty"`
+
+	Name      string `json:"name"`
+	Gender    string `json:"gender"`
+	BirthDate string `json:"birth_date"`
+	Year      int    `json:"year"`
+
+	// Divination
+	BenGua        string `json:"ben_gua"`
+	BianGua       string `json:"bian_gua"`
+	ChangingLines string `json:"changing_lines"`
+
+	// AI Analysis
+	RawOutput     string `gorm:"type:text" json:"-"`
+	FinalResponse string `gorm:"type:text" json:"final_response"`
+
+	CreatedAt time.Time `json:"created_at"`
+}

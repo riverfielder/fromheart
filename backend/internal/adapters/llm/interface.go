@@ -27,11 +27,19 @@ type LoveRequest struct {
 	ChangingLines          string
 }
 
+type YearlyRequest struct {
+	Name, Gender, Birth string
+	Year                int
+	BenGua, BianGua     string
+	ChangingLines       string
+}
+
 type Client interface {
 	GenerateAnswer(ctx context.Context, req GenerateRequest) (string, error)
 	GeneratePoem(ctx context.Context) (string, error)
 	GenerateBlessing(ctx context.Context) (string, error)
 	AnalyzeLove(ctx context.Context, req LoveRequest) (string, error)
+	AnalyzeYearly(ctx context.Context, req YearlyRequest) (string, error)
 	Chat(ctx context.Context, history []map[string]string) (string, error)
 	ChatStream(ctx context.Context, history []map[string]string, onToken func(string)) error
 	Embed(ctx context.Context, text string) ([]float32, error)

@@ -20,7 +20,7 @@
 
 - **Backend**: Go (Gin), GORM, Postgres, Redis
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, Framer Motion
-- **AI**: Baidu Wenxin (Ernie-3.5-8k) via API
+- **AI**: Baidu Wenxin (ernie-4.5-turbo-32k) via API
 - **Infrastructure**: Docker, Docker Compose
 
 ## ⚡️ 高并发与性能 (Architecture & Performance)
