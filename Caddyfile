@@ -2,7 +2,7 @@
 	# Global options
 }
 
-{$DOMAIN:localhost} {
+104.248.148.13.sslip.io {
 	# Enable Gzip compression
 	encode gzip
 
