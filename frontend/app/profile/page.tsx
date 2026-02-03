@@ -183,6 +183,23 @@ export default function ProfilePage() {
                         您的信息仅用于当次卜卦的定制化解读<br/>这也是大师“更懂你”的关键
                     </p>
                 </div>
+
+                {/* New Feature Promo */}
+                <div className="mt-8 relative group cursor-pointer overflow-hidden rounded-xl" onClick={() => router.push('/report')}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-90 transition-opacity group-hover:opacity-100" />
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
+                    <div className="relative p-5 flex items-center justify-between text-white">
+                        <div>
+                            <div className="text-sm font-bold flex items-center gap-2">
+                                <span>🔮</span> 灵魂画像生成器
+                            </div>
+                            <div className="text-[10px] opacity-80 mt-1">基于MBTI与星盘的深度解析</div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                            →
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div className="mt-8 text-center">

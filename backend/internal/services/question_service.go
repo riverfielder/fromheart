@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -679,4 +680,104 @@ func (s *QuestionService) CalculateYearlyFortune(ctx context.Context, req Yearly
 	}
 
 	return fortune, nil
+}
+
+func (s *QuestionService) GenerateMetaReport(ctx context.Context, userID uint) (*db.MetaReport, error) {
+	// 1. Get User Profile
+	var user db.User
+	if err := s.postgres.First(&user, userID).Error; err != nil {
+		return nil, err
+	}
+
+	if user.MBTI == "" || user.Zodiac == "" || user.BirthDateStr == "" {
+		return nil, errors.New("profile_incomplete")
+	}
+
+	// 2. Call LLM
+	llmReq := llm.MetaReportRequest{
+		Name:   "User", // Or use user.Username if appropriate, but maybe irrelevant for soul analysis
+		Gender: user.Gender,
+		Birth:  user.BirthDateStr,
+		MBTI:   user.MBTI,
+		Zodiac: user.Zodiac,
+	}
+
+	analysisJSON, err := s.llm.AnalyzeMetaReport(ctx, llmReq)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Parse JSON to struct fields (simple unmarshal)
+	// We need a helper struct to unmarshal the JSON from LLM
+	type ReportJSON struct {
+		SoulColor   string   `json:"soul_color"`
+		PastLife    string   `json:"past_life"`
+		Keywords    []string `json:"keywords"`
+		Description string   `json:"description"`
+	}
+	var data ReportJSON
+	// Handle potential markdown wrapping
+	cleanJSON := strings.TrimSpace(analysisJSON)
+	cleanJSON = strings.TrimPrefix(cleanJSON, "```json")
+	cleanJSON = strings.TrimPrefix(cleanJSON, "```")
+	cleanJSON = strings.TrimSuffix(cleanJSON, "```")
+
+	if err := json.Unmarshal([]byte(cleanJSON), &data); err != nil {
+		// Log error but maybe save raw string? Or fail?
+		// Let's fail for now or best effort.
+		return nil, fmt.Errorf("llm_json_error: %v", err)
+	}
+
+	keywordsStr := strings.Join(data.Keywords, ",")
+	if keywordsStr == "" {
+		// Fallback if it came as string in JSON (unlikely with prompt)
+		keywordsStr = "神秘,未知" 
+	}
+	// Make sure it's valid JSON array for the frontend if that's what we stored?
+	// The DB model has `Keywords string`. I'll store comma separated or JSON string. 
+	// Let's store it as JSON string in the DB column `Keywords`
+	keywordsJSON, _ := json.Marshal(data.Keywords)
+
+	report := &db.MetaReport{
+		UserID:      user.ID,
+		MBTI:        user.MBTI,
+		Zodiac:      user.Zodiac,
+		SoulColor:   data.SoulColor,
+		PastLife:    data.PastLife,
+		Keywords:    string(keywordsJSON),
+		Description: data.Description,
+	}
+
+	// Upsert? Or just Create?
+	// If unique index on UserID, we must Update or Delete/Create.
+	// User might want to regenerate.
+	// Let's find existing.
+	var existing db.MetaReport
+	if err := s.postgres.Where("user_id = ?", userID).First(&existing).Error; err == nil {
+		// Update
+		existing.MBTI = user.MBTI
+		existing.Zodiac = user.Zodiac
+		existing.SoulColor = data.SoulColor
+		existing.PastLife = data.PastLife
+		existing.Keywords = string(keywordsJSON)
+		existing.Description = data.Description
+		if err := s.postgres.Save(&existing).Error; err != nil {
+			return nil, err
+		}
+		return &existing, nil
+	} else {
+		// Create
+		if err := s.postgres.Create(report).Error; err != nil {
+			return nil, err
+		}
+		return report, nil
+	}
+}
+
+func (s *QuestionService) GetMetaReport(ctx context.Context, userID uint) (*db.MetaReport, error) {
+	var report db.MetaReport
+	if err := s.postgres.Where("user_id = ?", userID).First(&report).Error; err != nil {
+		return nil, err
+	}
+	return &report, nil
 }

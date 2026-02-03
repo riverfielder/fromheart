@@ -102,3 +102,19 @@ type YearlyFortune struct {
 
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type MetaReport struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"uniqueIndex" json:"user_id"`
+	MBTI      string    `json:"mbti"`
+	Zodiac    string    `json:"zodiac"`
+
+	// Generated Content
+	SoulColor   string `json:"soul_color"`
+	PastLife    string `json:"past_life"`
+	Keywords    string `json:"keywords"`                 // JSON array string ex: ["Deep", "Poetic"]
+	Description string `gorm:"type:text" json:"description"` // Full text analysis
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

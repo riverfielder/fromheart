@@ -52,6 +52,10 @@ func NewRouter(handler *handlers.QuestionHandler, authHandler *handlers.AuthHand
 		// Async Task Status
 		api.GET("/task/:id", taskHandler.GetStatus)
 
+		// Meta Report (Requires Auth)
+		api.POST("/report", middleware.RequireAuthMiddleware(), handler.GenerateMetaReport)
+		api.GET("/report", middleware.RequireAuthMiddleware(), handler.GetMetaReport)
+
 		api.POST("/question", handler.Ask)
 		api.GET("/divination/:id", handler.GetDivination)
 		// 追问接口添加每日限制

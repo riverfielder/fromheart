@@ -501,3 +501,42 @@ export async function submitYearlyForecast(data: {
   }
   return res.json() as Promise<YearlyResponse>;
 }
+
+export interface MetaReport {
+  id: number;
+  user_id: number;
+  mbti: string;
+  zodiac: string;
+  soul_color: string;
+  past_life: string;
+  keywords: string; // JSON string representation of array
+  description: string;
+  created_at: string;
+}
+
+export async function generateMetaReport(): Promise<MetaReport> {
+  const headers = getHeaders();
+  const res = await fetch(`${API_BASE}/api/report`, {
+    method: "POST",
+    headers,
+    ...fetchOptions,
+  });
+  if (!res.ok) {
+    if (res.status === 400) {
+        const err = await res.json();
+        throw new Error(err.message || "Profile Incomplete");
+    }
+    throw new Error("Failed to generate report");
+  }
+  return res.json();
+}
+
+export async function getMetaReport(): Promise<MetaReport> {
+  const headers = getHeaders();
+  const res = await fetch(`${API_BASE}/api/report`, {
+     headers,
+     ...fetchOptions,
+  });
+  if (!res.ok) throw new Error("No report found");
+  return res.json();
+}

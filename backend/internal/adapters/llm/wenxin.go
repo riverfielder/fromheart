@@ -236,6 +236,46 @@ func (w *WenxinClient) AnalyzeYearly(ctx context.Context, req YearlyRequest) (st
 	return w.doChat(ctx, payload)
 }
 
+func (w *WenxinClient) AnalyzeMetaReport(ctx context.Context, req MetaReportRequest) (string, error) {
+	if w.apiKey == "" {
+		return "", errors.New("missing WENXIN_API_KEY")
+	}
+
+	sysPrompt := `你是一位擅长洞察灵魂、精通MBTI与占星学的玄学艺术家。
+你需要根据用户的MBTI人格类型、星座、八字（出生信息），为他生成一份极具氛围感、神秘感且精准的“灵魂画像报告”。
+
+请生成以下内容（JSON格式）：
+1. **soul_color**：灵魂底色（如“深沉的黑”、“忧郁的蓝”、“热烈的红”等）。
+2. **past_life**：前世身份（如“隐居的诗人”、“流浪的剑客”、“古代司天监”等，要有画面感）。
+3. **keywords**：3个形容词标签（如“清醒”、“孤独”、“极致”）。
+4. **description**：一段关于他“灵魂本质”的描述，文字要优美、深刻、直击人心，带有“冷读术”的风格，让他觉得“这就是我”。(100字左右)
+
+输出格式严格为JSON：
+{
+  "soul_color": "...",
+  "past_life": "...",
+  "keywords": ["...", "...", "..."],
+  "description": "..."
+}`
+
+	userContent := fmt.Sprintf(`
+用户：%s (%s, %s)
+MBTI：%s
+星座：%s
+`, req.Name, req.Gender, req.Birth, req.MBTI, req.Zodiac)
+
+	payload := map[string]interface{}{
+		"model": w.model,
+		"messages": []map[string]string{
+			{"role": "system", "content": sysPrompt},
+			{"role": "user", "content": userContent + "\n\n请务必只返回纯JSON内容，严禁使用Markdown代码块，严禁包含任何前缀或后缀。"},
+		},
+		"temperature": 0.8, // Slightly higher creative freedom
+	}
+
+	return w.doChat(ctx, payload)
+}
+
 func (w *WenxinClient) doChat(ctx context.Context, payload map[string]interface{}) (string, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
